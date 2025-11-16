@@ -1,0 +1,3 @@
+# File: /etc/nginx/conf.d/limits.conf
+# BENCHMARK MODE: no rate-limit, no conn-limit, no zones.
+client_max_body_size 10m;

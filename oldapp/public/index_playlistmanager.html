@@ -1,0 +1,1113 @@
+<!doctype html>
+<html>
+  <head>
+    <title>NAS Playlist Manager</title>
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <style>
+        #login {
+            display: block;
+        }
+        #loggedin{
+            display: none;
+        }
+    </style>
+    <style type="text/css">
+        .text-overflow {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            width: 500px;
+        }
+        
+        [draggable=true] {
+            user-select: none;
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+        }
+        
+        ol.moveable {
+            list-style: none;
+            margin: 0px;
+        }
+        ol.moveable li {
+            list-style-image: none;
+            margin: 6px;
+            border: 2px solid #666;
+            padding: 6px;
+            border-radius: 8px;
+            color: #666;
+            cursor: move;
+        }
+        ol.moveable li:hover {
+            background-color: #eee;
+        }
+    </style>
+    <style>
+        .loader {
+          border: 16px solid #f3f3f3;
+          border-radius: 50%;
+          border-top: 16px solid #3498db;
+          width: 80px;
+          height: 80px;
+          -webkit-animation: spin 2s linear infinite; /* Safari */
+          animation: spin 2s linear infinite;
+        }
+        
+        /* Safari */
+        @-webkit-keyframes spin {
+          0% { -webkit-transform: rotate(0deg); }
+          100% { -webkit-transform: rotate(360deg); }
+        }
+        
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+    </style>
+    <style>
+        /* Style the tab */
+        .tab {
+          overflow: hidden;
+          border: 1px solid #ccc;
+          background-color: #f1f1f1;
+        }
+        
+        /* Style the buttons inside the tab */
+        .tab button {
+          background-color: inherit;
+          float: left;
+          border: none;
+          outline: none;
+          cursor: pointer;
+          padding: 14px 16px;
+          transition: 0.3s;
+          font-size: 17px;
+        }
+        
+        /* Change background color of buttons on hover */
+        .tab button:hover {
+          background-color: #ddd;
+        }
+        
+        /* Create an active/current tablink class */
+        .tab button.active {
+          background-color: #ccc;
+        }
+        
+        /* Style the tab content */
+        .tabcontent {
+          display: none;
+          padding: 6px 12px;
+          border-top: none;
+        }
+    </style>
+
+    <script>
+        window.console = window.console || function(t) {};
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  </head>
+
+  <body onload="onBodyLoaded()" translate="no">
+    <div class="container">
+      <div id="login">
+        <h1>NAS Playlist Manager</h1>
+        <h3 id="welcomeMessage"></h3>
+        <a id="loginButton" href="https://spotifyfollow.a2hosted.com/" onclick="location.href=this.href+ENVIRONMENT+'/'+PAGE+'_login';return false;" class="btn btn-primary">Login</a><br/>
+      </div>
+      <div id="loggedin">
+        <h1>NAS Playlist Manager</h1>
+        <h3 id="results1"></h3>
+        <h3 id="playlistSelect">Select Playlist</h3>
+        
+        <h4></h4>
+        
+        <div class="tab">
+          <button class="tablinks" onclick="selectPlaylist(event, '101')">101</button>
+          <button class="tablinks" onclick="selectPlaylist(event, 'NAS')">NAS</button>
+          <button class="tablinks" onclick="selectPlaylist(event, 'Pro')">Pro</button>
+          <button class="tablinks" onclick="selectPlaylist(event, 'Allstars')">All-stars</button>
+          <button class="tablinks" onclick="selectPlaylist(event, 'Superstars')">Superstars</button>
+          <button class="tablinks" onclick="selectPlaylist(event, 'Elite')">Elite</button>
+          <button class="tablinks" onclick="selectPlaylist(event, 'Legends')">Legends</button>
+        </div>
+        
+        <div id="101" class="tabcontent">
+          <h3>Playlist: 101</h3>
+          <p>What action would you like to take?</p>
+        </div>
+        
+        <div id="NAS" class="tabcontent">
+          <h3>Playlist: NAS</h3>
+          <p>What action would you like to take?</p>
+        </div>
+        
+        <div id="Pro" class="tabcontent">
+          <h3>Playlist: Pro</h3>
+          <p>What action would you like to take?</p>
+        </div>
+        
+        <div id="Allstars" class="tabcontent">
+          <h3>Playlist: All-stars</h3>
+          <p>What action would you like to take?</p>
+        </div>
+        
+        <div id="Superstars" class="tabcontent">
+          <h3>Playlist: Superstars</h3>
+          <p>What action would you like to take?</p>
+        </div>
+        
+        <div id="Elite" class="tabcontent">
+          <h3>Playlist: Elite</h3>
+          <p>What action would you like to take?</p>
+        </div>
+        
+        <div id="Legends" class="tabcontent">
+          <h3>Playlist: Legends</h3>
+          <p>What action would you like to take?</p>
+        </div>
+        
+        <div id="Options">
+            <label class="radio-inline">
+              <input type="radio" onclick="optionRadioClicked(this.value)" name="playlistRadio" value="Update">Update Order
+            </label>
+            <label class="radio-inline">
+              <input type="radio" onclick="optionRadioClicked(this.value)" name="playlistRadio" value="Add">Add Element
+            </label>
+            <label class="radio-inline">
+              <input type="radio" onclick="optionRadioClicked(this.value)" name="playlistRadio" value="Remove">Remove Elements
+            </label>
+        </div>
+        
+        <div id="UpdateDiv">
+            <h3>Update elements on this playlist then commit changes</h3>
+            <div id="updateContainer"></div>
+            <h3></h3>
+            <button id="updateButton" onClick="onUpdateButtonPressed()" class="btn btn-primary">Commit Changes</button><br/>
+        </div>
+        
+        <div id="AddDiv">
+            <h3>Add an element to this playlist</h3>
+            <label for="groupType">Group Type:</label>
+            <select name="groupType" id="groupType" onchange="groupTypeChange()">
+                <option value="SongGroup">Song Group</option>
+                <option value="SingleSong">Single Song</option>
+            </select><br/>
+            <div id="SongGroupDiv">
+                <label for="groupTier">Tier:</label>
+                <select name="groupTier" id="groupTier" onchange="groupTierChange()">
+                    <option value="0">Tier 0</option>
+                    <option value="1">Tier 1</option>
+                    <option value="2">Tier 2</option>
+                    <option value="3">Tier 3</option>
+                    <option value="4">Tier 4</option>
+                    <option value="5">Tier 5</option>
+                    <option value="6">Tier 6</option>
+                    <option value="7">Tier 7</option>
+                    <option value="8">Tier 8</option>
+                    <option value="mods">Mods</option>
+                    <option value="mentors">Mentors</option>
+                </select><br/>
+                <label for="songNumber">Song Number:</label>
+                <input type="number" id="songNumber" name="songNumber" min="1" max="20" value="1"><br/>
+                <label for="songCount">Max Songs:</label>
+                <input type="number" id="songCount" name="songCount" min="0" max="50" value="50"><br/>
+            </div>
+            <div id="SingleSongDiv">
+                <label for="songId">Spotify Song Id:</label>
+                <input type="text" id="songId" name="songId" value=""><br/>
+            </div>
+            <button id="addElementButton" onClick="onAddElementPressed()" class="btn btn-primary">Add Element</button><br/>
+        </div>
+        
+        <div id="RemoveDiv">
+            <h3>Remove elements from this playlist then commit changes</h3>
+            <div id="removeContainer"></div>
+            <h3></h3>
+            <button id="deleteButton" onClick="onDeleteButtonPressed()" class="btn btn-primary">Commit Changes</button><br/>
+        </div>
+        
+        <h3 id="resultMessage"></h3>
+        <h4></h4>
+        
+        <button id="logoutButton" onClick="onLogoutButtonPressed()" class="btn btn-primary">Logout</button><br/>
+      </div>
+    </div>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0-alpha.1/handlebars.min.js"></script>
+    <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+    
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
+    
+    <script id="rendered-js" >
+    
+        var currentOption = "";
+        var currentPlaylist = "101";
+        var groupType = "SongGroup";
+        var groupTier = 0;
+        
+        document.getElementById("Options").style.display = "none";
+        document.getElementById("UpdateDiv").style.display = "none";
+        document.getElementById("AddDiv").style.display = "none";
+        document.getElementById("RemoveDiv").style.display = "none";
+        document.getElementById("SingleSongDiv").style.display = "none";
+
+        function getEnvironmentFromURL()
+        {
+            var prefix = "https://spotifyfollow.a2hosted.com/";
+            var url = window.location.href;
+            var sections = url.split('/');
+            return sections[3];
+        }
+        
+        function getPageFromURL()
+        {
+            var prefix = "https://spotifyfollow.a2hosted.com/";
+            var url = window.location.href;
+            var sections = url.split('/');
+            return sections[4];
+        }
+        
+        var ENVIRONMENT = getEnvironmentFromURL();
+        var PAGE = getPageFromURL();
+        
+        var xmlHttpRequest = new XMLHttpRequest();
+            
+        function getHashParams() {
+            var hashParams = {};
+            var e, r = /([^&;=]+)=?([^&;]*)/g,
+              q = window.location.hash.substring(1);
+            while ( e = r.exec(q)) {
+             hashParams[e[1]] = decodeURIComponent(e[2]);
+            }
+            return hashParams;
+        }
+        
+        //Song Drag and drop
+        
+        function dragStart(e)
+        {
+            var index = $(e.target).index();
+            e.dataTransfer.setData('text/plain', index);
+        }
+        
+        function dropped(e)
+        {
+            cancelDefault(e);
+            
+            // get new and old index
+            let oldIndex = e.dataTransfer.getData('text/plain');
+            let target = $(this);
+            let newIndex = target.index();
+                
+            if(oldIndex != newIndex)
+            {
+                // remove dropped items at old place
+                let dropped = $(this).parent().children().eq(oldIndex).remove();
+                
+                // insert the dropped items at new place
+                if (newIndex < oldIndex)
+                {
+                    target.before(dropped);
+                }
+                else
+                {
+                    target.after(dropped);
+                }
+            }
+        }
+        
+        function cancelDefault(e)
+        {
+          e.preventDefault();
+          e.stopPropagation();
+          return false;
+        }
+        //# sourceURL=pen.js
+        
+        function disableButtons()
+        {
+            document.getElementById("addElementButton").disabled = true;
+            document.getElementById("deleteButton").disabled = true;
+        }
+        
+        function enableButtons()
+        {
+            document.getElementById("addElementButton").disabled = false;
+            document.getElementById("deleteButton").disabled = false;
+        }
+        
+        //Playlist Radio
+        function optionRadioClicked(optionName)
+        {
+            document.getElementById("resultMessage").innerHTML = "";
+            currentOption = optionName;
+            
+            document.getElementById("UpdateDiv").style.display = "none";
+            document.getElementById("AddDiv").style.display = "none";
+            document.getElementById("RemoveDiv").style.display = "none";
+            document.getElementById(optionName + "Div").style.display = "block";
+            
+            if(optionName == "Remove")
+            {
+                disableButtons();
+                
+                var oldList = document.getElementById("removeList");
+                if(oldList != null)
+                {
+                    oldList.remove();
+                }
+                
+                var removeContainer = document.getElementById("removeContainer");
+                var spinner = document.createElement('div');
+                spinner.classList.add("loader");
+                
+                var att = document.createAttribute("id");
+                att.value = "removeSpinner";
+                spinner.setAttributeNode(att);
+                
+                removeContainer.appendChild(spinner);
+                
+                xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/get_playlist_elements?refresh_token=' + refresh_token + 
+                    '&access_token=' + access_token +
+                    '&spotify_name=' + display_name +
+                    '&spotify_id=' + spotify_id +
+                    '&playlist=' + currentPlaylist, true);
+                xmlHttpRequest.onreadystatechange = onGetRemovePlaylistElementsComplete;
+                xmlHttpRequest.send();
+            }
+            else if(optionName == "Update")
+            {
+                disableButtons();
+                
+                var oldList = document.getElementById("updateList");
+                if(oldList != null)
+                {
+                    oldList.remove();
+                }
+                
+                var updateContainer = document.getElementById("updateContainer");
+                var spinner = document.createElement('div');
+                spinner.classList.add("loader");
+                
+                var att = document.createAttribute("id");
+                att.value = "updateSpinner";
+                spinner.setAttributeNode(att);
+                
+                updateContainer.appendChild(spinner);
+                
+                xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/get_playlist_elements?refresh_token=' + refresh_token + 
+                    '&access_token=' + access_token +
+                    '&spotify_name=' + display_name +
+                    '&spotify_id=' + spotify_id +
+                    '&playlist=' + currentPlaylist, true);
+                xmlHttpRequest.onreadystatechange = onGetUpdatePlaylistElementsComplete;
+                xmlHttpRequest.send();
+            }
+        }
+        
+        function selectPlaylist(evt, playlistName)
+        {
+            currentPlaylist = playlistName;
+            
+            var tabcontent = document.getElementsByClassName("tabcontent");
+            for (var i = 0; i < tabcontent.length; i++)
+            {
+                tabcontent[i].style.display = "none";
+            }
+            
+            var tablinks = document.getElementsByClassName("tablinks");
+            for (var i = 0; i < tablinks.length; i++)
+            {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            
+            document.getElementById(playlistName).style.display = "block";
+            evt.currentTarget.className += " active";
+            document.getElementById("Options").style.display = "block";
+            
+            if(currentOption != "")
+            {
+                optionRadioClicked(currentOption);
+            }
+        }
+        
+        function groupTypeChange()
+        {
+            groupType = document.getElementById("groupType").value;
+            
+            document.getElementById("SingleSongDiv").style.display = "none";
+            document.getElementById("SongGroupDiv").style.display = "none";
+            
+            document.getElementById(groupType + "Div").style.display = "block";
+        }
+        
+        function groupTierChange()
+        {
+            groupTier = document.getElementById("groupTier").value;
+        }
+    
+        function onBodyLoaded()
+        {
+            document.getElementById("welcomeMessage").innerHTML = "Hi";
+                
+            var params = getHashParams();
+            
+            if(params.access_token != null && params.refresh_token != null)
+            {
+                last_access_token_refresh = new Date();
+                
+                access_token = params.access_token;
+                refresh_token = params.refresh_token;
+                
+                document.getElementById("login").style.display = "none";
+                document.getElementById("loggedin").style.display = "block";
+                    
+                document.getElementById("results1").innerHTML = "Welcome";
+                
+                xmlHttpRequest = new XMLHttpRequest();
+            
+                xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE + '_user_info?refresh_token=' + refresh_token + '&access_token=' + access_token, true);
+                xmlHttpRequest.onreadystatechange = onUserInfoReceived;
+                xmlHttpRequest.send();
+            }
+            else
+            {
+                document.getElementById("welcomeMessage").innerHTML = "Click the login button to sign in with Spotify, and have access to all the NAS tools";
+        
+                document.getElementById("login").style.display = "block";
+                document.getElementById("loggedin").style.display = "none";
+            }
+        }
+        
+        function onUserInfoReceived()
+        {
+            if (this.readyState == 4 && this.status == 200) {
+               var result = 'Success';
+               var jsonResponse = JSON.parse(xmlHttpRequest.response);
+               var message = "";
+               
+               if(jsonResponse != null)
+               {
+                   if(jsonResponse.result != null)
+                   {
+                       result = jsonResponse.result;
+                   }
+                   if(jsonResponse.display_name != null)
+                   {
+                       display_name = jsonResponse.display_name;
+                   }
+                   if(jsonResponse.id != null)
+                   {
+                       spotify_id = jsonResponse.id;
+                   }
+                   if(jsonResponse.message != null)
+                   {
+                       message = jsonResponse.message;
+                   }
+               }
+               
+               if(result == 'Success')
+               {
+                    document.getElementById("results1").innerHTML = "Welcome " + display_name;
+                    
+                    document.getElementById("login").style.display = "none";
+                    document.getElementById("loggedin").style.display = "block";
+               }
+               else if (result == 'Error' && message == 'The access token expired')
+               {
+                    xmlHttpRequest = new XMLHttpRequest();
+                    
+                    xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/refresh_access_token?refresh_token=' + refresh_token + 
+                        '&access_token=' + access_token +
+                        '&spotify_name=' + display_name +
+                        '&spotify_id=' + spotify_id, true);
+                    xmlHttpRequest.onreadystatechange = onUserInfoTokenExpiredRefresh;
+                    xmlHttpRequest.send();
+               }
+               else
+               {
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE);
+               }
+            }
+        }
+        
+        function onUserInfoTokenExpiredRefresh()
+        {
+            if (this.readyState == 4 && this.status == 200) {
+                var result = 'Success';
+                var message = '';
+                var jsonResponse = JSON.parse(xmlHttpRequest.response);
+                if(jsonResponse != null)
+                {
+                    if(jsonResponse.result != null)
+                    {
+                       result = jsonResponse.result;
+                    }
+                    if(jsonResponse.message != null)
+                    {
+                       message = jsonResponse.message;
+                    }
+                    if(jsonResponse.access_token != null)
+                    {
+                       access_token = jsonResponse.access_token;
+                    }
+                }
+                
+                if(result == 'Success')
+                {
+                    last_access_token_refresh = new Date(); 
+                    
+                    xmlHttpRequest = new XMLHttpRequest();
+                
+                    xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE + '_user_info?refresh_token=' + refresh_token + '&access_token=' + access_token, true);
+                    xmlHttpRequest.onreadystatechange = onPostRefreshUserInfoReceived;
+                    xmlHttpRequest.send();
+                }
+                else if(message == 'Authentication Error')
+                {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE);
+                }
+                else
+                {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                }
+            }
+        }
+        
+        function onPostRefreshUserInfoReceived()
+        {
+            if (this.readyState == 4 && this.status == 200) {
+               var result = 'Success';
+               var jsonResponse = JSON.parse(xmlHttpRequest.response);
+               var message = "";
+               
+               if(jsonResponse != null)
+               {
+                   if(jsonResponse.result != null)
+                   {
+                       result = jsonResponse.result;
+                   }
+                   if(jsonResponse.display_name != null)
+                   {
+                       display_name = jsonResponse.display_name;
+                   }
+                   if(jsonResponse.id != null)
+                   {
+                       spotify_id = jsonResponse.id;
+                   }
+                   if(jsonResponse.message != null)
+                   {
+                       message = jsonResponse.message;
+                   }
+               }
+               
+               if(result == 'Success')
+               {
+                    document.getElementById("results1").innerHTML = "Welcome " + display_name;
+                    
+                    document.getElementById("login").style.display = "none";
+                    document.getElementById("loggedin").style.display = "block";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE + '/#access_token=' + access_token + '&refresh_token=' + refresh_token);
+               }
+               else
+               {
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE);
+               }
+            }
+        }
+        
+        function onAddElementPressed()
+        {
+            document.getElementById("resultMessage").innerHTML = "";
+            disableButtons();
+            
+            if(groupType == "SongGroup")
+            {
+                var groupTier = document.getElementById("groupTier").value;
+                var songNumber = document.getElementById("songNumber").value;
+                var songCount = document.getElementById("songCount").value;
+                
+                xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/add_playlist_element?refresh_token=' + refresh_token + 
+                    '&access_token=' + access_token +
+                    '&spotify_name=' + display_name +
+                    '&spotify_id=' + spotify_id +
+                    '&playlist=' + currentPlaylist +
+                    '&type=' + groupType +
+                    '&tier=' + groupTier +
+                    '&song_number=' + songNumber +
+                    '&song_count=' + songCount, true);
+                xmlHttpRequest.onreadystatechange = onAddElementComplete;
+                xmlHttpRequest.send();
+            }
+            else if(groupType == "SingleSong")
+            {
+                var songId = document.getElementById("songId").value;
+                
+                xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/add_playlist_element?refresh_token=' + refresh_token + 
+                    '&access_token=' + access_token +
+                    '&spotify_name=' + display_name +
+                    '&spotify_id=' + spotify_id +
+                    '&playlist=' + currentPlaylist +
+                    '&type=' + groupType +
+                    '&song_id=' + songId, true);
+                xmlHttpRequest.onreadystatechange = onAddElementComplete;
+                xmlHttpRequest.send();
+            }
+        }
+        
+        function onAddElementComplete()
+        {
+            enableButtons();
+            
+            if (this.readyState == 4 && this.status == 200) {
+               var result = 'Success';
+               var jsonResponse = JSON.parse(xmlHttpRequest.response);
+               var message = '';
+               if(jsonResponse != null)
+               {
+                   if(jsonResponse.result != null)
+                   {
+                       result = jsonResponse.result;
+                   }
+                   if(jsonResponse.message != null)
+                   {
+                       message = jsonResponse.message;
+                   }
+               }
+               
+               if(result == 'Success')
+               {
+                   document.getElementById("resultMessage").innerHTML = "Playlist Group Successfully Added";
+               }
+               else if(result == 'Error' && message == 'The access token expired')
+               {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + "/" + PAGE);
+               }
+               else if(result == 'Error' && message == "Invalid Song Id")
+               {
+                   document.getElementById("resultMessage").innerHTML = "Invalid Song Id:" + document.getElementById("songId").value;
+               }
+               else
+               {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + "/" + PAGE);
+               }
+            }
+        }
+        
+        function onGetRemovePlaylistElementsComplete()
+        {
+            enableButtons();
+            
+            if (this.readyState == 4 && this.status == 200)
+            {
+                var result = 'Success';
+                var jsonResponse = JSON.parse(xmlHttpRequest.response);
+                var message = '';
+                var data = null;
+                if(jsonResponse != null)
+                {
+                    if(jsonResponse.result != null)
+                    {
+                        result = jsonResponse.result;
+                    }
+                    if(jsonResponse.message != null)
+                    {
+                        message = jsonResponse.message;
+                    }
+                    if(jsonResponse.data != null)
+                    {
+                        data = jsonResponse.data;
+                    }
+                }
+                
+                if(result == 'Success')
+                {
+                    var spinner = document.getElementById("removeSpinner");
+                    spinner.remove();
+                    
+                    var oldList = document.getElementById("removeList");
+                    if(oldList != null)
+                    {
+                        oldList.remove();
+                    }
+                    
+                    var removeContainer = document.getElementById("removeContainer");
+                    var removeList = document.createElement("ul");
+                    removeList.classList.add("w3-ul");
+                    removeList.classList.add("w3-border");
+                    
+                    var removeListAtt = document.createAttribute("id");
+                    removeListAtt.value = "removeList";
+                    removeList.setAttributeNode(removeListAtt);
+                    
+                    for(var i = 0; i < data.length; ++ i)
+                    {
+                        var groupElement = data[i];
+                        
+                        var li = document.createElement("li");
+                        
+                        var textField = "";
+                        
+                        if(groupElement.groupType == "SingleSong")
+                        {
+                            textField += groupElement.songName;
+                        }
+                        else if(groupElement.groupType == "SongGroup")
+                        {
+                            if(groupElement.groupTier >= 0)
+                            {
+                                textField += "Tier:" + groupElement.groupTier;
+                            }
+                            else if(groupElement.modGroup == 1)
+                            {
+                                textField += "Mods";
+                            }
+                            else if(groupElement.modGroup == 2)
+                            {
+                                textField += "Mentors";
+                            }
+                                
+                            textField += ", Song:" + groupElement.songPosition + 
+                                ", Max:" + (groupElement.songCount == 0 ? "Unlimited" : groupElement.songCount);
+                        }
+                        
+                        li.appendChild(document.createTextNode(textField));
+                        
+                        var groupPosition = i + 1;
+                        
+                        var att = document.createAttribute("id");
+                        att.value = "groupElement" + groupPosition;
+                        li.setAttributeNode(att);
+                        
+                        li.classList.add("w3-display-container");
+                        
+                        var span = document.createElement('span');
+                        span.innerHTML = '&times;';
+                        span.classList.add("w3-button");
+                        span.classList.add("w3-transparent");
+                        span.classList.add("w3-display-right");
+                        span.setAttribute('onClick', "this.parentElement.style.display='none'");
+                        
+                        li.appendChild(span);
+
+                        removeList.appendChild(li);
+                    }
+                    
+                    removeContainer.appendChild(removeList);
+                }
+                else if(result == 'Error' && message == 'The access token expired')
+                {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + "/" + PAGE);
+                }
+                else
+                {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + "/" + PAGE);
+                }
+            }
+        }
+        
+        function onDeleteButtonPressed()
+        {
+            disableButtons();
+            
+            var removeList = document.getElementById("removeList");
+            
+            var deleteList = [];
+            removeList.childNodes.forEach(listElement =>
+            {
+                if(listElement.style.display == 'none')
+                {
+                    var elementString = listElement.id.replace('groupElement','');
+                    deleteList.push(elementString);
+                }
+            });
+            
+            if(deleteList.length > 0)
+            {
+                var deleteString = "";
+                
+                for(var i = 0; i < deleteList.length; ++i)
+                {
+                    deleteString += deleteList[i];
+                    
+                    if(i < deleteList.length - 1)
+                    {
+                        deleteString += ",";
+                    }
+                }
+                
+                xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/delete_playlist_element?refresh_token=' + refresh_token + 
+                    '&access_token=' + access_token +
+                    '&spotify_name=' + display_name +
+                    '&spotify_id=' + spotify_id +
+                    '&playlist=' + currentPlaylist +
+                    '&remove_elements=' + deleteString, true);
+                xmlHttpRequest.onreadystatechange = onDeleteElementComplete;
+                xmlHttpRequest.send();
+            }
+        }
+        
+        function onDeleteElementComplete()
+        {
+            if (this.readyState == 4 && this.status == 200)
+            {
+                var result = 'Success';
+                var jsonResponse = JSON.parse(xmlHttpRequest.response);
+                var message = '';
+                var data = null;
+                if(jsonResponse != null)
+                {
+                    if(jsonResponse.result != null)
+                    {
+                        result = jsonResponse.result;
+                    }
+                    if(jsonResponse.message != null)
+                    {
+                        message = jsonResponse.message;
+                    }
+                    if(jsonResponse.data != null)
+                    {
+                        data = jsonResponse.data;
+                    }
+                }
+                
+                if(result == 'Success')
+                {
+                    var removeContainer = document.getElementById("removeContainer");
+                    var spinner = document.createElement('div');
+                    spinner.classList.add("loader");
+                    
+                    var att = document.createAttribute("id");
+                    att.value = "removeSpinner";
+                    spinner.setAttributeNode(att);
+                    
+                    removeContainer.appendChild(spinner);
+                    
+                    xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/get_playlist_elements?refresh_token=' + refresh_token + 
+                        '&access_token=' + access_token +
+                        '&spotify_name=' + display_name +
+                        '&spotify_id=' + spotify_id +
+                        '&playlist=' + currentPlaylist, true);
+                    xmlHttpRequest.onreadystatechange = onGetRemovePlaylistElementsComplete;
+                    xmlHttpRequest.send();
+                    
+                   document.getElementById("resultMessage").innerHTML = "Playlist elements sucessfully deleted";
+                }
+                else if(result == 'Error' && message == 'The access token expired')
+                {
+                    enableButtons();
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + "/" + PAGE);
+                }
+                else
+                {
+                    enableButtons();
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + "/" + PAGE);
+                }
+            }
+        }
+        
+        function onGetUpdatePlaylistElementsComplete()
+        {
+            enableButtons();
+            
+            if (this.readyState == 4 && this.status == 200)
+            {
+                var result = 'Success';
+                var jsonResponse = JSON.parse(xmlHttpRequest.response);
+                var message = '';
+                var data = null;
+                if(jsonResponse != null)
+                {
+                    if(jsonResponse.result != null)
+                    {
+                        result = jsonResponse.result;
+                    }
+                    if(jsonResponse.message != null)
+                    {
+                        message = jsonResponse.message;
+                    }
+                    if(jsonResponse.data != null)
+                    {
+                        data = jsonResponse.data;
+                    }
+                }
+                
+                if(result == 'Success')
+                {
+                    var spinner = document.getElementById("updateSpinner");
+                    spinner.remove();
+                    
+                    var oldList = document.getElementById("updateList");
+                    if(oldList != null)
+                    {
+                        oldList.remove();
+                    }
+                    
+                    var updateContainer = document.getElementById("updateContainer");
+                    var updateList = document.createElement("ol");
+                    updateList.classList.add("moveable");
+                    
+                    var updateListAtt = document.createAttribute("id");
+                    updateListAtt.value = "updateList";
+                    updateList.setAttributeNode(updateListAtt);
+                    
+                    for(var i = 0; i < data.length; ++ i)
+                    {
+                        var groupElement = data[i];
+                        
+                        var li = document.createElement("li");
+                        
+                        var textField = "";
+                        
+                        if(groupElement.groupType == "SingleSong")
+                        {
+                            textField += groupElement.songName;
+                        }
+                        else if(groupElement.groupType == "SongGroup")
+                        {
+                            if(groupElement.groupTier >= 0)
+                            {
+                                textField += "Tier:" + groupElement.groupTier;
+                            }
+                            else if(groupElement.modGroup == 1)
+                            {
+                                textField += "Mods";
+                            }
+                            else if(groupElement.modGroup == 2)
+                            {
+                                textField += "Mentors";
+                            }
+                                
+                            textField += ", Song:" + groupElement.songPosition + 
+                                ", Max:" + (groupElement.songCount == 0 ? "Unlimited" : groupElement.songCount);
+                        }
+                        
+                        li.appendChild(document.createTextNode(textField));
+                        
+                        var groupPosition = i + 1;
+                        
+                        var att = document.createAttribute("id");
+                        att.value = "groupElement" + groupPosition;
+                        li.setAttributeNode(att);
+                        
+                        li.setAttribute('draggable', true);
+                        li.addEventListener('dragstart', dragStart);
+                        li.addEventListener('drop', dropped);
+                        li.addEventListener('dragenter', cancelDefault);
+                        li.addEventListener('dragover', cancelDefault);
+
+                        updateList.appendChild(li);
+                    }
+                    
+                    updateContainer.appendChild(updateList);
+                }
+                else if(result == 'Error' && message == 'The access token expired')
+                {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + "/" + PAGE);
+                }
+                else
+                {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + "/" + PAGE);
+                }
+            }
+        }
+        
+        function onUpdateButtonPressed()
+        {
+            disableButtons();
+            
+            let items = document.querySelectorAll('#updateList > li');
+            
+            var groupListString = "";
+            
+            for(var i = 0; i < items.length; ++i)
+            {
+                var elementString = items[i].getAttribute("id").replace('groupElement','');
+                groupListString += elementString;
+                
+                if(i < (items.length - 1))
+                {
+                    groupListString += ",";
+                }
+            }
+            
+            xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/update_playlist_order?refresh_token=' + refresh_token + 
+                '&access_token=' + access_token +
+                '&spotify_name=' + display_name +
+                '&spotify_id=' + spotify_id +
+                '&playlist=' + currentPlaylist +
+                '&order=' + groupListString, true);
+            xmlHttpRequest.onreadystatechange = onUpdateComplete;
+            xmlHttpRequest.send();
+        }
+        
+        function onUpdateComplete()
+        {
+            enableButtons();
+            
+            if (this.readyState == 4 && this.status == 200)
+            {
+                var result = 'Success';
+                var jsonResponse = JSON.parse(xmlHttpRequest.response);
+                var message = '';
+                var data = null;
+                if(jsonResponse != null)
+                {
+                    if(jsonResponse.result != null)
+                    {
+                        result = jsonResponse.result;
+                    }
+                    if(jsonResponse.message != null)
+                    {
+                        message = jsonResponse.message;
+                    }
+                    if(jsonResponse.data != null)
+                    {
+                        data = jsonResponse.data;
+                    }
+                }
+                
+                if(result == 'Success')
+                {
+                    document.getElementById("resultMessage").innerHTML = "Playlist Sucessfully Updated";
+                }
+                else if(result == 'Error' && message == 'The access token expired')
+                {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + "/" + PAGE);
+                }
+                else
+                {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + "/" + PAGE);
+                }
+            }
+        }
+        
+        function onLogoutButtonPressed()
+        {
+            const url = 'https://www.spotify.com/logout/';
+            const spotifyLogoutWindow = window.open(url, 'Spotify Logout', 'width=700,height=500,top=40,left=40');
+            setTimeout(() => 
+            {
+                spotifyLogoutWindow.close();
+                location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE);
+            }, 1000);
+        }
+        
+    </script>
+  </body>
+</html>

@@ -1,0 +1,1284 @@
+<!doctype html>
+<html>
+  <head>
+    <title>NAS User Song List</title>
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+    <style>
+        #login {
+            display: block;
+        }
+        #loggedin{
+            display: none;
+        }
+    </style>
+    <style type="text/css">
+        .text-overflow {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            width: 500px;
+        }
+        
+        [draggable=true] {
+            user-select: none;
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+        }
+        
+        ol.moveable {
+            list-style: none;
+            margin: 0px;
+        }
+        ol.moveable li {
+            list-style-image: none;
+            margin: 6px;
+            border: 2px solid #666;
+            padding: 6px;
+            border-radius: 8px;
+            color: #666;
+            cursor: move;
+        }
+        ol.moveable li:hover {
+            background-color: #eee;
+        }
+    </style>
+    <style>
+        .loader {
+          border: 16px solid #f3f3f3;
+          border-radius: 50%;
+          border-top: 16px solid #3498db;
+          width: 80px;
+          height: 80px;
+          -webkit-animation: spin 2s linear infinite; /* Safari */
+          animation: spin 2s linear infinite;
+        }
+        
+        /* Safari */
+        @-webkit-keyframes spin {
+          0% { -webkit-transform: rotate(0deg); }
+          100% { -webkit-transform: rotate(360deg); }
+        }
+        
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+    </style>
+    <script>
+        window.console = window.console || function(t) {};
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  </head>
+
+  <body onload="onBodyLoaded()" translate="no">
+    <div class="container">
+      <div id="login">
+        <h1>NAS User Song List</h1>
+        <h3 id="welcomeMessage"></h3>
+        <a id="loginButton" href="https://spotifyfollow.a2hosted.com/" onclick="location.href=this.href+ENVIRONMENT+'/'+PAGE+'_login';return false;" class="btn btn-primary">Login</a><br/>
+      </div>
+      <div id="loggedin">
+        <h1>NAS User Song List</h1>
+        <h3 id="results1"></h3>
+        <h4 id="artistListTitle"></h4>
+        <ul id="artistList"></ul>
+        <h4 id="songListTitle"></h4>
+        <p id="songlistInstructions"></p>
+        <ol id="songList" class="moveable"></ol>
+        <div id="spinnerContainer">
+            <div class="loader" id="spinner"></div>
+        </div>
+        <div id = "songRulesDiv">
+            <h3 id="songRulesTitle">Song Selection Rule</h3>
+            <p>Select the rule to apply to your songs. Click 'Save Song Order' button to commit rule selection.</p>
+            <input type="radio" id="songRules100" onclick="songRulesRadioClicked(this.value)" name="songRulesRadio" value="100">
+            <label for="songRulesRadio">100% top song</label><br>
+            <input type="radio" id="songRules70" onclick="songRulesRadioClicked(this.value)" name="songRulesRadio" value="70">
+            <label for="songRulesRadio">70% chance top song, 30% chance next song</label><br>
+            <input type="radio" id="songRules33" onclick="songRulesRadioClicked(this.value)" name="songRulesRadio" value="33">
+            <label for="songRulesRadio">33% chance each top 3 songs</label><br>
+            <input type="radio" id="songRules20" onclick="songRulesRadioClicked(this.value)" name="songRulesRadio" value="20">
+            <label for="songRulesRadio">20% chance each top 5 songs</label><br>
+            <input type="radio" id="songRules10" onclick="songRulesRadioClicked(this.value)" name="songRulesRadio" value="10">
+            <label for="songRulesRadio">10% chance each top 10 songs</label><br>
+            <input type="radio" id="songRulesRandom" onclick="songRulesRadioClicked(this.value)" name="songRulesRadio" value="random">
+            <label for="songRulesRadio">Random</label><br>
+        </div>
+        <h4></h4>
+        <button id="submitButton" onClick="onSubmitButtonPressed()" class="btn btn-primary">Save Song Order & Rule</button><br>
+        <h4></h4>
+        <button id="resetButton" onClick="onResetButtonPressed()" class="btn btn-primary">Reset Song Order</button><br>
+        <h4></h4>
+        <button id="previewButton" onClick="onPreviewButtonPressed()" class="btn btn-primary">Preview Song Rule</button><br>
+        <h4></h4>
+        <button id="logoutButton" onClick="onLogoutButtonPressed()" class="btn btn-primary">Logout</button><br>
+      </div>
+    </div>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0-alpha.1/handlebars.min.js"></script>
+    <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+    
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
+    
+    <script id="rendered-js" >
+    
+        function getEnvironmentFromURL()
+        {
+            var prefix = "https://spotifyfollow.a2hosted.com/";
+            var url = window.location.href;
+            var sections = url.split('/');
+            return sections[3];
+        }
+        
+        function getPageFromURL()
+        {
+            var prefix = "https://spotifyfollow.a2hosted.com/";
+            var url = window.location.href;
+            var sections = url.split('/');
+            return sections[4];
+        }
+        
+        var ENVIRONMENT = getEnvironmentFromURL();
+        var PAGE = getPageFromURL();
+        
+        var xmlHttpRequest = new XMLHttpRequest();
+            
+        function getHashParams() {
+            var hashParams = {};
+            var e, r = /([^&;=]+)=?([^&;]*)/g,
+              q = window.location.hash.substring(1);
+            while ( e = r.exec(q)) {
+             hashParams[e[1]] = decodeURIComponent(e[2]);
+            }
+            return hashParams;
+        }
+        
+        //Song Drag and drop
+        
+        function dragStart(e)
+        {
+            var index = $(e.target).index();
+            e.dataTransfer.setData('text/plain', index);
+        }
+        
+        function dropped(e)
+        {
+            let items = document.querySelectorAll('#songList > li');
+            cancelDefault(e);
+            
+            // get new and old index
+            let oldIndex = e.dataTransfer.getData('text/plain');
+            let target = $(this);
+            let newIndex = target.index();
+            items[oldIndex].setAttribute("style", "background-color: #ecc;");
+            var newName = items[oldIndex].getAttribute("fullNameText") + " *** Song order has changed, click 'Save Song Order' to commit new order ***";
+            
+            items[oldIndex].childNodes[2].nodeValue = newName;
+            
+            if(oldIndex != newIndex)
+            {
+                // remove dropped items at old place
+                let dropped = $(this).parent().children().eq(oldIndex).remove();
+                
+                // insert the dropped items at new place
+                if (newIndex < oldIndex)
+                {
+                    target.before(dropped);
+                }
+                else
+                {
+                    target.after(dropped);
+                }
+            }
+        }
+        
+        function cancelDefault(e)
+        {
+          e.preventDefault();
+          e.stopPropagation();
+          return false;
+        }
+        //# sourceURL=pen.js
+        
+        function disableButtons()
+        {
+            document.getElementById("submitButton").disabled = true;
+            document.getElementById("resetButton").disabled = true;
+            document.getElementById("previewButton").disabled = true;
+        }
+        
+        function enableButtons()
+        {
+            document.getElementById("submitButton").disabled = false;
+            document.getElementById("resetButton").disabled = false;
+            document.getElementById("previewButton").disabled = false;
+        }
+    
+        function onBodyLoaded()
+        {
+            disableButtons();
+            document.getElementById("welcomeMessage").innerHTML = "Hi";
+                
+            var params = getHashParams();
+            
+            if(params.access_token != null && params.refresh_token != null)
+            {
+                last_access_token_refresh = new Date();
+                
+                access_token = params.access_token;
+                refresh_token = params.refresh_token;
+                
+                document.getElementById("login").style.display = "none";
+                document.getElementById("loggedin").style.display = "block";
+                document.getElementById("songRulesDiv").style.display = "none";
+                    
+                document.getElementById("results1").innerHTML = "Welcome";
+                
+                xmlHttpRequest = new XMLHttpRequest();
+            
+                xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE + '_user_info?refresh_token=' + refresh_token + '&access_token=' + access_token, true);
+                xmlHttpRequest.onreadystatechange = onUserInfoReceived;
+                xmlHttpRequest.send();
+            }
+            else
+            {
+                document.getElementById("welcomeMessage").innerHTML = "Click the login button to sign in with Spotify, and have access to all the NAS tools";
+        
+                document.getElementById("login").style.display = "block";
+                document.getElementById("loggedin").style.display = "none";
+            }
+        }
+        
+        function onUserInfoReceived()
+        {
+            if (this.readyState == 4 && this.status == 200) {
+               var result = 'Success';
+               var jsonResponse = JSON.parse(xmlHttpRequest.response);
+               var message = "";
+               
+               if(jsonResponse != null)
+               {
+                   if(jsonResponse.result != null)
+                   {
+                       result = jsonResponse.result;
+                   }
+                   if(jsonResponse.display_name != null)
+                   {
+                       display_name = jsonResponse.display_name;
+                   }
+                   if(jsonResponse.id != null)
+                   {
+                       spotify_id = jsonResponse.id;
+                   }
+                   if(jsonResponse.message != null)
+                   {
+                       message = jsonResponse.message;
+                   }
+               }
+               
+               if(result == 'Success')
+               {
+                    document.getElementById("results1").innerHTML = "Welcome " + display_name;
+                    
+                    document.getElementById("login").style.display = "none";
+                    document.getElementById("loggedin").style.display = "block";
+                    document.getElementById("songRulesDiv").style.display = "none";
+                    
+                    xmlHttpRequest = new XMLHttpRequest();
+                            
+                    xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/get_ordered_song_list?refresh_token=' + refresh_token + 
+                        '&access_token=' + access_token +
+                        '&spotify_name=' + display_name +
+                        '&spotify_id=' + spotify_id, true);
+                    xmlHttpRequest.onreadystatechange = onSongListReceived;
+                    xmlHttpRequest.send();
+               }
+               else if (result == 'Error' && message == 'The access token expired')
+               {
+                    xmlHttpRequest = new XMLHttpRequest();
+                    
+                    xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/refresh_access_token?refresh_token=' + refresh_token + 
+                        '&access_token=' + access_token +
+                        '&spotify_name=' + display_name +
+                        '&spotify_id=' + spotify_id, true);
+                    xmlHttpRequest.onreadystatechange = onUserInfoTokenExpiredRefresh;
+                    xmlHttpRequest.send();
+               }
+               else
+               {
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE);
+               }
+            }
+        }
+        
+        function onUserInfoTokenExpiredRefresh()
+        {
+            if (this.readyState == 4 && this.status == 200) {
+                var result = 'Success';
+                var message = '';
+                var jsonResponse = JSON.parse(xmlHttpRequest.response);
+                if(jsonResponse != null)
+                {
+                    if(jsonResponse.result != null)
+                    {
+                       result = jsonResponse.result;
+                    }
+                    if(jsonResponse.message != null)
+                    {
+                       message = jsonResponse.message;
+                    }
+                    if(jsonResponse.access_token != null)
+                    {
+                       access_token = jsonResponse.access_token;
+                    }
+                }
+                
+                if(result == 'Success')
+                {
+                    last_access_token_refresh = new Date(); 
+                    
+                    xmlHttpRequest = new XMLHttpRequest();
+                
+                    xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE + '_user_info?refresh_token=' + refresh_token + '&access_token=' + access_token, true);
+                    xmlHttpRequest.onreadystatechange = onPostRefreshUserInfoReceived;
+                    xmlHttpRequest.send();
+                }
+                else if(message == 'Authentication Error')
+                {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE);
+                }
+                else
+                {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                }
+            }
+        }
+        
+        function onPostRefreshUserInfoReceived()
+        {
+            if (this.readyState == 4 && this.status == 200) {
+               var result = 'Success';
+               var jsonResponse = JSON.parse(xmlHttpRequest.response);
+               var message = "";
+               
+               if(jsonResponse != null)
+               {
+                   if(jsonResponse.result != null)
+                   {
+                       result = jsonResponse.result;
+                   }
+                   if(jsonResponse.display_name != null)
+                   {
+                       display_name = jsonResponse.display_name;
+                   }
+                   if(jsonResponse.id != null)
+                   {
+                       spotify_id = jsonResponse.id;
+                   }
+                   if(jsonResponse.message != null)
+                   {
+                       message = jsonResponse.message;
+                   }
+               }
+               
+               if(result == 'Success')
+               {
+                    document.getElementById("results1").innerHTML = "Welcome " + display_name;
+                    
+                    document.getElementById("login").style.display = "none";
+                    document.getElementById("loggedin").style.display = "block";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE + '/#access_token=' + access_token + '&refresh_token=' + refresh_token);
+               }
+               else
+               {
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE);
+               }
+            }
+        }
+        
+        function onSongListReceived()
+        {
+            if (this.readyState == 4 && this.status == 200) {
+               var result = 'Success';
+               var message = '';
+               var data = null;
+               var jsonResponse = JSON.parse(xmlHttpRequest.response);
+               if(jsonResponse != null)
+               {
+                   if(jsonResponse.result != null)
+                   {
+                       result = jsonResponse.result;
+                   }
+                   if(jsonResponse.message != null)
+                   {
+                       message = jsonResponse.message;
+                   }
+                   if(jsonResponse.data != null)
+                   {
+                       data = jsonResponse.data;
+                   }
+               }
+               
+               if(result == 'Success')
+               {
+                    var ol = document.getElementById("songList");
+                    
+                    data.songList.forEach(song =>
+                    {
+                        var li = document.createElement("li");
+                        
+                        var img = document.createElement("IMG");
+                        img.setAttribute("width", "32");
+                        img.setAttribute("height", "32");
+                        img.setAttribute("src", song.imgURL);
+                        img.setAttribute("draggable", false);
+                        
+                        li.appendChild(img);
+                        li.appendChild(document.createTextNode(" "));
+                        
+                        var textField = song.name + " by ";
+                        
+                        for(var artistIndex = 0; artistIndex < song.artists.length; ++artistIndex)
+                        {
+                            textField += song.artists[artistIndex].name;
+                            
+                            if(artistIndex < song.artists.length - 1)
+                            {
+                                textField += ", ";
+                            }
+                        }
+                        
+                        textField += " (Popularity: " + song.popularity + "%)";
+                        
+                        var att = document.createAttribute("fullNameText");
+                        att.value = textField;
+                        li.setAttributeNode(att);
+                        
+                        if(!song.saved)
+                        {
+                            li.setAttribute("style", "background-color: #ecc;");
+                            textField += " *** This song is not saved to your song list, click 'Save Song Order' to add it ***";
+                        }
+                        
+                        li.appendChild(document.createTextNode(textField));
+                        
+                        var att = document.createAttribute("id");
+                        att.value = song.id;
+                        li.setAttributeNode(att);
+                        
+                        var songNameAtt = document.createAttribute("songName");
+                        songNameAtt.value = song.name;
+                        li.setAttributeNode(songNameAtt);
+                        
+                        ol.appendChild(li);
+                    });
+                    
+                    let items = document.querySelectorAll('#songList > li');
+                    
+                    items.forEach(item => {
+                        //$(item).prop('draggable', true);
+                        item.setAttribute('draggable', true);
+                        item.addEventListener('dragstart', dragStart);
+                        item.addEventListener('drop', dropped);
+                        item.addEventListener('dragenter', cancelDefault);
+                        item.addEventListener('dragover', cancelDefault);
+                    });
+                    
+                    var spinner = document.getElementById("spinner");
+                    spinner.remove();
+                    
+                    document.getElementById("songListTitle").innerHTML = "Song List";
+                    document.getElementById("songlistInstructions").innerHTML = "Reorder by dragging and dropping songs. If songs are red then they are not currently saved to your song list. Click 'Save Song Order' button to commit order.";
+                    
+                    var ul = document.getElementById("artistList");
+                    
+                    data.artistList.forEach(artist =>
+                    {
+                        var li = document.createElement("li");
+                        
+                        var artistText = artist.name + " (Popularity: " + artist.popularity + "%)";
+                        if(artist.genres != null && artist.genres.length > 0)
+                        {
+                            artistText += " ";
+                            for(var i = 0; i < artist.genres.length; ++i)
+                            {
+                                artistText += artist.genres[i];
+                                
+                                if(i < artist.genres.length - 1)
+                                {
+                                    artistText += ", ";
+                                }
+                            }
+                        }
+                        li.appendChild(document.createTextNode(artistText));
+                        ul.appendChild(li);
+                    });
+                    
+                    document.getElementById("artistListTitle").innerHTML = "Artists";
+                    
+                    enableButtons();
+                    
+                    xmlHttpRequest = new XMLHttpRequest();
+                            
+                    xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/get_song_rule?refresh_token=' + refresh_token + 
+                        '&access_token=' + access_token +
+                        '&spotify_name=' + display_name +
+                        '&spotify_id=' + spotify_id, true);
+                    xmlHttpRequest.onreadystatechange = onSongRuleReceived;
+                    xmlHttpRequest.send();
+               }
+               else if(message == 'Authentication Error')
+               {
+                    enableButtons();
+                    var spinner = document.getElementById("spinner");
+                    spinner.remove();
+                    
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + "/" + PAGE);
+               }
+               else if(message == 'No artist linked')
+               {
+                    enableButtons();
+                    var spinner = document.getElementById("spinner");
+                    spinner.remove();
+                    
+                    document.getElementById("results1").innerHTML = "Error: " + message;
+               }
+               else
+               {
+                    enableButtons();
+                    var spinner = document.getElementById("spinner");
+                    spinner.remove();
+                    
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+               }
+            }
+        }
+        
+        
+        function songRulesRadioClicked(newRule)
+        {
+            
+        }
+        
+        function onSongRuleReceived()
+        {
+            if (this.readyState == 4 && this.status == 200)
+            {
+               var result = 'Success';
+               var jsonResponse = JSON.parse(xmlHttpRequest.response);
+               var message = '';
+               var rule = 0;
+               
+               if(jsonResponse != null)
+               {
+                   if(jsonResponse.result != null)
+                   {
+                       result = jsonResponse.result;
+                   }
+                   if(jsonResponse.message != null)
+                   {
+                       message = jsonResponse.message;
+                   }
+                   if(jsonResponse.rule != null)
+                   {
+                       rule = jsonResponse.rule;
+                   }
+               }
+               
+               if(result == 'Success')
+               {
+                   document.getElementById("songRulesDiv").style.display = "block";
+                    
+                   if(rule == '0')
+                   {
+                       document.getElementById('songRules100').checked = true;
+                   }
+                   else
+                   {
+                       document.getElementById('songRules100').checked = false;
+                   }
+                   
+                   if(rule == '1')
+                   {
+                       document.getElementById('songRules70').checked = true;
+                   }
+                   else
+                   {
+                       document.getElementById('songRules70').checked = false;
+                   }
+                   
+                   if(rule == '2')
+                   {
+                       document.getElementById('songRules33').checked = true;
+                   }
+                   else
+                   {
+                       document.getElementById('songRules33').checked = false;
+                   }
+                   
+                   if(rule == '3')
+                   {
+                       document.getElementById('songRules20').checked = true;
+                   }
+                   else
+                   {
+                       document.getElementById('songRules20').checked = false;
+                   }
+                   
+                   if(rule == '4')
+                   {
+                       document.getElementById('songRules10').checked = true;
+                   }
+                   else
+                   {
+                       document.getElementById('songRules10').checked = false;
+                   }
+                   
+                   if(rule == '5')
+                   {
+                       document.getElementById('songRulesRandom').checked = true;
+                   }
+                   else
+                   {
+                       document.getElementById('songRulesRandom').checked = false;
+                   }
+               }
+               else if(result == 'Error' && message == 'The access token expired')
+               {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + "/" + PAGE);
+               }
+               else
+               {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + "/" + PAGE);
+               }
+            }
+        }
+        
+        function onSubmitButtonPressed()
+        {
+            disableButtons();
+            let items = document.querySelectorAll('#songList > li');
+            
+            var songListString = "";
+            
+            var max = 100;
+            if(items.length < max)
+            {
+                max = items.length;
+            }
+            
+            for(var i = 0; i < max; ++i)
+            {
+                songListString += items[i].getAttribute("id");
+                
+                if(i < (max - 1))
+                {
+                    songListString += ",";
+                }
+            }
+            
+            xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/set_ordered_song_list?refresh_token=' + refresh_token + 
+                '&access_token=' + access_token +
+                '&spotify_name=' + display_name +
+                '&spotify_id=' + spotify_id +
+                '&song_list=' + songListString, true);
+            xmlHttpRequest.onreadystatechange = onSubmitComplete;
+            xmlHttpRequest.send();
+        }
+        
+        function onSubmitComplete()
+        {
+            if (this.readyState == 4 && this.status == 200)
+            {
+               var result = 'Success';
+               var jsonResponse = JSON.parse(xmlHttpRequest.response);
+               var message = '';
+               if(jsonResponse != null)
+               {
+                   if(jsonResponse.result != null)
+                   {
+                       result = jsonResponse.result;
+                   }
+                   if(jsonResponse.message != null)
+                   {
+                       message = jsonResponse.message;
+                   }
+               }
+               
+               if(result == 'Success')
+               {
+                   let items = document.querySelectorAll('#songList > li');
+                    
+                    var max = 100;
+                
+                    if(items.length < max)
+                    {
+                        max = items.length;
+                    }
+            
+                    for(var i = 0; i < items.length; ++i)
+                    {
+                        if(i < max)
+                        {
+                            items[i].style.removeProperty("background-color");
+                            var newName = items[i].getAttribute("fullNameText");
+                            items[i].childNodes[2].nodeValue = newName;
+                        }
+                        else
+                        {
+                            var newName = items[i].getAttribute("fullNameText") + " *** This song is not saved to your song list ***";
+                            items[i].childNodes[2].nodeValue = newName;
+                            items[i].setAttribute("style", "background-color: #ecc;");
+                        }
+                    }
+            
+                   var rule = 0;
+                   
+                   if(document.getElementById('songRules70').checked)
+                   {
+                       rule = 1;
+                   }
+                   else if(document.getElementById('songRules33').checked)
+                   {
+                       rule = 2;
+                   }
+                   else if(document.getElementById('songRules20').checked)
+                   {
+                       rule = 3;
+                   }
+                   else if(document.getElementById('songRules10').checked)
+                   {
+                       rule = 4;
+                   }
+                   else if(document.getElementById('songRulesRandom').checked)
+                   {
+                       rule = 5;
+                   }
+                   
+                    xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/set_song_rule?refresh_token=' + refresh_token + 
+                        '&access_token=' + access_token +
+                        '&spotify_name=' + display_name +
+                        '&spotify_id=' + spotify_id +
+                        '&rule=' + rule, true);
+                    xmlHttpRequest.onreadystatechange = onRuleSubmitComplete;
+                    xmlHttpRequest.send();
+               }
+               else if(result == 'Error' && message == 'The access token expired')
+               {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + "/" + PAGE);
+               }
+               else
+               {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + "/" + PAGE);
+               }
+            }
+        }
+        
+        function onRuleSubmitComplete()
+        {
+            enableButtons();
+            
+            if (this.readyState == 4 && this.status == 200)
+            {
+               var result = 'Success';
+               var jsonResponse = JSON.parse(xmlHttpRequest.response);
+               var message = '';
+               if(jsonResponse != null)
+               {
+                   if(jsonResponse.result != null)
+                   {
+                       result = jsonResponse.result;
+                   }
+                   if(jsonResponse.message != null)
+                   {
+                       message = jsonResponse.message;
+                   }
+               }
+               
+               if(result == 'Success')
+               {
+                   alert("Your song order and rules have been saved");
+               }
+               else if(result == 'Error' && message == 'The access token expired')
+               {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + "/" + PAGE);
+               }
+               else
+               {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + "/" + PAGE);
+               }
+            }
+        }
+        
+        function onResetButtonPressed()
+        {
+            disableButtons();
+            let items = document.querySelectorAll('#songList > li');
+            
+            xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/reset_song_list?refresh_token=' + refresh_token + 
+                '&access_token=' + access_token +
+                '&spotify_name=' + display_name +
+                '&spotify_id=' + spotify_id, true);
+            xmlHttpRequest.onreadystatechange = onResetComplete;
+            xmlHttpRequest.send();
+        }
+        
+        function onResetComplete(){
+            
+            if (this.readyState == 4 && this.status == 200) {
+               var result = 'Success';
+               var jsonResponse = JSON.parse(xmlHttpRequest.response);
+               var message = '';
+               if(jsonResponse != null)
+               {
+                   if(jsonResponse.result != null)
+                   {
+                       result = jsonResponse.result;
+                   }
+                   if(jsonResponse.message != null)
+                   {
+                       message = jsonResponse.message;
+                   }
+               }
+               
+               if(result == 'Success')
+               {
+                    alert("Your song order has been reset");
+                    
+                    let items = document.querySelectorAll('#songList > li');
+                    
+                    items.forEach(item =>
+                    {
+                        item.remove();
+                    });
+                    
+                    var spinnerContainer = document.getElementById("spinnerContainer");
+                    
+                    var spinner = document.createElement('div');
+                    spinner.classList.add("loader");
+                    
+                    var att = document.createAttribute("id");
+                    att.value = "spinner";
+                    spinner.setAttributeNode(att);
+                    
+                    spinnerContainer.appendChild(spinner);
+                    
+                    xmlHttpRequest = new XMLHttpRequest();
+                            
+                    xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/get_ordered_song_list?refresh_token=' + refresh_token + 
+                        '&access_token=' + access_token +
+                        '&spotify_name=' + display_name +
+                        '&spotify_id=' + spotify_id, true);
+                    xmlHttpRequest.onreadystatechange = onSongListResetComplete;
+                    xmlHttpRequest.send();
+               }
+               else if(result == 'Error' && message == 'The access token expired')
+               {
+                    enableButtons();
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + "/" + PAGE);
+               }
+               else
+               {
+                    enableButtons();
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + "/" + PAGE);
+               }
+            }
+        }
+        
+        function onSongListResetComplete()
+        {
+            if (this.readyState == 4 && this.status == 200) {
+               var result = 'Success';
+               var message = '';
+               var data = null;
+               var jsonResponse = JSON.parse(xmlHttpRequest.response);
+               if(jsonResponse != null)
+               {
+                   if(jsonResponse.result != null)
+                   {
+                       result = jsonResponse.result;
+                   }
+                   if(jsonResponse.message != null)
+                   {
+                       message = jsonResponse.message;
+                   }
+                   if(jsonResponse.data != null)
+                   {
+                       data = jsonResponse.data;
+                   }
+               }
+               
+               if(result == 'Success')
+               {
+                    var ol = document.getElementById("songList");
+                    
+                    data.songList.forEach(song =>
+                    {
+                        var li = document.createElement("li");
+                        
+                        var img = document.createElement("IMG");
+                        img.setAttribute("width", "32");
+                        img.setAttribute("height", "32");
+                        img.setAttribute("src", song.imgURL); //https://i.scdn.co/image/ab67616d00001e02ff9ca10b55ce82ae553c8228
+                        img.setAttribute("draggable", false);
+                        
+                        li.appendChild(img);
+                        li.appendChild(document.createTextNode(" "));
+                        
+                        var textField = song.name + " by ";
+                        
+                        for(var artistIndex = 0; artistIndex < song.artists.length; ++artistIndex)
+                        {
+                            textField += song.artists[artistIndex].name;
+                            
+                            if(artistIndex < song.artists.length - 1)
+                            {
+                                textField += ", ";
+                            }
+                        }
+                        
+                        textField += " (" + song.popularity + ")";
+                        
+                        var att = document.createAttribute("fullNameText");
+                        att.value = textField;
+                        li.setAttributeNode(att);
+                        
+                        if(!song.saved)
+                        {
+                            li.setAttribute("style", "background-color: #ecc;");
+                            textField += " *** This song is not saved to your song list, click 'Save Song Order' to add it ***";
+                        }
+                        
+                        li.appendChild(document.createTextNode(textField));
+                        
+                        var att = document.createAttribute("id");
+                        att.value = song.id;
+                        li.setAttributeNode(att);
+                        
+                        var songNameAtt = document.createAttribute("songName");
+                        songNameAtt.value = song.name;
+                        li.setAttributeNode(songNameAtt);
+                        
+                        ol.appendChild(li);
+                    });
+                    
+                    let items = document.querySelectorAll('#songList > li');
+                    
+                    items.forEach(item => {
+                        //$(item).prop('draggable', true);
+                        item.setAttribute('draggable', true);
+                        item.addEventListener('dragstart', dragStart);
+                        item.addEventListener('drop', dropped);
+                        item.addEventListener('dragenter', cancelDefault);
+                        item.addEventListener('dragover', cancelDefault);
+                    });
+                    
+                    var spinner = document.getElementById("spinner");
+                    spinner.remove();
+                    
+                    document.getElementById("songListTitle").innerHTML = "Song List";
+                    
+                    enableButtons();
+               }
+               else if(message == 'Authentication Error')
+               {
+                    enableButtons();
+                    var spinner = document.getElementById("spinner");
+                    spinner.remove();
+                    
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + "/" + PAGE);
+               }
+               else
+               {
+                    enableButtons();
+                    var spinner = document.getElementById("spinner");
+                    spinner.remove();
+                    
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+               }
+            }
+        }
+        
+        function onPreviewButtonPressed()
+        {
+            disableButtons();
+            let items = document.querySelectorAll('#songList > li');
+            
+            var songListString = "";
+            
+            var max = 100;
+            if(items.length < max)
+            {
+                max = items.length;
+            }
+            
+            for(var i = 0; i < max; ++i)
+            {
+                songListString += items[i].getAttribute("id");
+                
+                if(i < (max - 1))
+                {
+                    songListString += ",";
+                }
+            }
+            
+            xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/get_song_rule_preview?refresh_token=' + refresh_token + 
+                '&access_token=' + access_token +
+                '&spotify_name=' + display_name +
+                '&spotify_id=' + spotify_id +
+                '&song_list=' + songListString, true);
+            xmlHttpRequest.onreadystatechange = onPreviewComplete;
+            xmlHttpRequest.send();
+        }
+        
+        function onPreviewComplete(){
+            
+            if (this.readyState == 4 && this.status == 200) {
+               var result = 'Success';
+               var jsonResponse = JSON.parse(xmlHttpRequest.response);
+               var message = '';
+               var playlists = null;
+               if(jsonResponse != null)
+               {
+                   if(jsonResponse.result != null)
+                   {
+                       result = jsonResponse.result;
+                   }
+                   if(jsonResponse.message != null)
+                   {
+                       message = jsonResponse.message;
+                   }
+                   if(jsonResponse.playlists != null)
+                   {
+                       playlists = jsonResponse.playlists;
+                   }
+               }
+               
+               if(result == 'Success')
+               {
+                    enableButtons();
+                    
+                    let items = document.querySelectorAll('#songList > li');
+                    var message = "";
+                    
+                    if(!document.getElementById('songRules100').checked)
+                    {
+                        message += "The rule you have selected is a probability based rule.\n";
+                        message += "The preview generated here may not be the song selected.\n";
+                        message += "You can run the preview a few times to get an idea of which songs might be selected.\n";
+                    }
+                    
+                    message += "Click 'Save Song Order' to save the current order & rule.\n\n";
+                    
+                    var playlistFound = false;
+                    
+                    if(playlists.length > 0)
+                    {
+                        playlists.forEach(playlist =>
+                        {
+                            if(playlist.count > 0)
+                            {
+                                playlistFound = true;
+                            }
+                        });
+                    }
+                    
+                    if(playlists.length > 0 && playlistFound)
+                    {
+                        if(document.getElementById('songRules100').checked)
+                        {
+                            playlists.forEach(playlist =>
+                            {
+                                if(playlist.count > 0)
+                                {
+                                    if(items.length >= playlist.count)
+                                    {
+                                        message += playlist.playlist + " -> ";
+                                        
+                                        for(var i = 0; i < playlist.count; ++i)
+                                        {
+                                            message += items[i].getAttribute("songName");
+                                            
+                                            if(i < playlist.count - 1)
+                                            {
+                                                message += ", "
+                                            }
+                                        }
+                                        message += "\n";
+                                    }
+                                    else
+                                    {
+                                        message += "Not enough items for placement on " + playlist + "\n";
+                                    }
+                                }
+                            });
+                        }
+                        else if(document.getElementById('songRules70').checked)
+                        {
+                            playlists.forEach(playlist =>
+                            {
+                                if(playlist.count > 0)
+                                {
+                                    var alreadyChosen = [];
+                                    var picks = [];
+                                    
+                                    if(items.length >= playlist.count + 1)
+                                    {
+                                        message += playlist.playlist + " -> ";
+                                        
+                                        for(var i = 0; i < playlist.count; ++i)
+                                        {
+                                            for(var j = 0; (j < items.length) && (picks.length < 2); ++j)
+                                            {
+                                                if(!alreadyChosen.includes(j))
+                                                {
+                                                    picks.push(j);
+                                                }
+                                            }
+                                            
+                                            var rand = Math.random() * 10;
+                                            
+                                            if(rand < 7)
+                                            {
+                                                message += items[picks[0]].getAttribute("songName");
+                                                alreadyChosen.push(picks[0]);
+                                            }
+                                            else
+                                            {
+                                                message += items[picks[1]].getAttribute("songName");
+                                                alreadyChosen.push(picks[1]);
+                                            }
+                                            
+                                            if(i < playlist.count - 1)
+                                            {
+                                                message += ", "
+                                            }
+                                            
+                                            picks = [];
+                                        }
+                                        message += "\n";
+                                    }
+                                    else
+                                    {
+                                        message += "Not enough items for placement on " + playlist + "\n";
+                                    }
+                                }
+                            });
+                        }
+                        else
+                        {
+                            var total = items.length;
+                            
+                            if(document.getElementById('songRules33').checked)
+                            {
+                                if(total >= 3)
+                                {
+                                    total = 3;
+                                }
+                            }
+                            else if(document.getElementById('songRules20').checked)
+                            {
+                                if(total >= 5)
+                                {
+                                    total = 5;
+                                }
+                            }
+                            else if(document.getElementById('songRules10').checked)
+                            {
+                                if(total >= 10)
+                                {
+                                    total = 10;
+                                }
+                            }
+                            
+                            playlists.forEach(playlist =>
+                            {
+                                if(playlist.count > 0)
+                                {
+                                    var alreadyChosen = [];
+                                    var picks = [];
+                                    
+                                    if(items.length >= playlist.count + 1)
+                                    {
+                                        message += playlist.playlist + " -> ";
+                                        
+                                        for(var i = 0; i < playlist.count; ++i)
+                                        {
+                                            for(var j = 0; (j < items.length) && (picks.length < total); ++j)
+                                            {
+                                                if(!alreadyChosen.includes(j))
+                                                {
+                                                    picks.push(j);
+                                                }
+                                            }
+                                            
+                                            var index = Math.floor(Math.random() * picks.length);
+                                            message += items[picks[index]].getAttribute("songName");
+                                            alreadyChosen.push(picks[index]);
+                                            
+                                            if(i < playlist.count - 1)
+                                            {
+                                                message += ", "
+                                            }
+                                            
+                                            picks = [];
+                                        }
+                                        message += "\n";
+                                    }
+                                    else
+                                    {
+                                        message += "Not enough items for placement on " + playlist + "\n";
+                                    }
+                                }
+                            });
+                        }
+                    }
+                    else
+                    {
+                        message += "No playlists found for your tier";
+                    }
+                    
+                    alert(message);
+               }
+               else if(result == 'Error' && message == 'The access token expired')
+               {
+                    enableButtons();
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + "/" + PAGE);
+               }
+               else
+               {
+                    enableButtons();
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + "/" + PAGE);
+               }
+            }
+        }
+        
+        function onLogoutButtonPressed()
+        {
+            const url = 'https://www.spotify.com/logout/';
+            const spotifyLogoutWindow = window.open(url, 'Spotify Logout', 'width=700,height=500,top=40,left=40');
+            setTimeout(() => 
+            {
+                spotifyLogoutWindow.close();
+                location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE);
+            }, 1000);
+        }
+        
+    </script>
+  </body>
+</html>

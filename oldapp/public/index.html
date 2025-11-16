@@ -1,0 +1,925 @@
+<!doctype html>
+<html>
+  <head>
+    <title>NAS Utilities</title>
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+    <style type="text/css">
+      #login {
+        display: block;
+      }
+      #loggedin{
+        display: none;
+      }
+      .text-overflow {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        width: 500px;
+      }
+    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  </head>
+
+  <body onload="onBodyLoaded()">
+    <div class="container">
+      <div id="login">
+        <h1>NAS Utilities</h1>
+        <h3 id="welcomeMessage"></h3>
+        <a id="loginButton" href="https://spotifyfollow.a2hosted.com/" onclick="location.href=this.href+ENVIRONMENT+'/login';return false;" class="btn btn-primary">Login</a><br/>
+      </div>
+      <div id="loggedin">
+        <h1>NAS Utilities</h1>
+        <h3 id="results1"></h3>
+        <button id="submitButton" onClick="onSubmitButtonPressed()" class="btn btn-primary">Submit</button>
+        <button id="autoSubmitButton" onClick="onAutoSubmitButtonPressed()" class="btn btn-primary">Auto Submit</button>
+        <button id="followButton" onClick="onFollowButtonPressed()" class="btn btn-primary">Weekly Follow Gate</button>
+        <button id="reportButton" onClick="onReportButtonPressed()" class="btn btn-primary">Get Report</button>
+        <button id="logoutButton" onClick="onLogoutButtonPressed()" class="btn btn-primary">Logout</button><br>
+        <h3 id="results2"></h3>
+        <h3 id="results3"></h3>
+        <h3 id="results4"></h3>
+        <h3 id="results5"></h3>
+        <h3 id="results6"></h3>
+        <h3 id="results7"></h3>
+      </div>
+    </div>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0-alpha.1/handlebars.min.js"></script>
+    <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+
+    <script>
+        
+        function getEnvironmentFromURL()
+        {
+            var prefix = "https://spotifyfollow.a2hosted.com/";
+            var url = window.location.href;
+            var sections = url.split('/');
+            return sections[3];
+        }
+        
+        var ENVIRONMENT = getEnvironmentFromURL();
+        
+        var xmlHttpRequest = new XMLHttpRequest();
+        
+        var access_token = null;
+        var refresh_token = null;
+        var display_name = null;
+        var spotify_id = null;
+        var total_songs_liked = null;
+        var new_songs_liked = null;
+        var total_artists_followed = null;
+        var new_artists_followed = null;
+        var total_playlists_followed = null;
+        var new_playlists_followed = null;
+        var total_episodes_saved = null;
+        var new_episodes_saved = null;
+        var total_shows_saved = null;
+        var new_shows_saved = null;
+        
+        var last_access_token_refresh = null;
+        var post_refresh_update_callback = null;
+        var is_manual_refresh = false;
+    
+        function getHashParams() {
+            var hashParams = {};
+            var e, r = /([^&;=]+)=?([^&;]*)/g,
+              q = window.location.hash.substring(1);
+            while ( e = r.exec(q)) {
+             hashParams[e[1]] = decodeURIComponent(e[2]);
+            }
+            return hashParams;
+        }
+        
+        function disableButtons()
+        {
+            document.getElementById("submitButton").disabled = true;
+            document.getElementById("autoSubmitButton").disabled = true;
+            document.getElementById("followButton").disabled = true;
+            document.getElementById("reportButton").disabled = true;
+        }
+        
+        function enableButtons()
+        {
+            document.getElementById("submitButton").disabled = false;
+            document.getElementById("autoSubmitButton").disabled = false;
+            document.getElementById("followButton").disabled = false;
+            document.getElementById("reportButton").disabled = false;
+        }
+    
+        function onBodyLoaded()
+        {
+            document.getElementById("welcomeMessage").innerHTML = "Hi";
+                
+            var params = getHashParams();
+            
+            if(params.access_token != null && params.refresh_token != null)
+            {
+                last_access_token_refresh = new Date();
+                
+                access_token = params.access_token;
+                refresh_token = params.refresh_token;
+                
+                document.getElementById("login").style.display = "none";
+                document.getElementById("loggedin").style.display = "block";
+                    
+                document.getElementById("results1").innerHTML = "Welcome";
+                
+                xmlHttpRequest = new XMLHttpRequest();
+            
+                xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/user_info?refresh_token=' + refresh_token + '&access_token=' + access_token, true);
+                xmlHttpRequest.onreadystatechange = onUserInfoReceived;
+                xmlHttpRequest.send();
+            }
+            else
+            {
+                document.getElementById("welcomeMessage").innerHTML = "Click the login button to sign in with Spotify, and have access to all the NAS tools";
+        
+                document.getElementById("login").style.display = "block";
+                document.getElementById("loggedin").style.display = "none";
+            }
+        }
+        
+        function onUserInfoReceived()
+        {
+            if (this.readyState == 4 && this.status == 200) {
+               var result = 'Success';
+               var jsonResponse = JSON.parse(xmlHttpRequest.response);
+               var message = "";
+               
+               if(jsonResponse != null)
+               {
+                   if(jsonResponse.result != null)
+                   {
+                       result = jsonResponse.result;
+                   }
+                   if(jsonResponse.display_name != null)
+                   {
+                       display_name = jsonResponse.display_name;
+                   }
+                   if(jsonResponse.id != null)
+                   {
+                       spotify_id = jsonResponse.id;
+                   }
+                   if(jsonResponse.message != null)
+                   {
+                       message = jsonResponse.message;
+                   }
+               }
+               
+               if(result == 'Success')
+               {
+                    document.getElementById("results1").innerHTML = "Welcome " + display_name;
+                    
+                    document.getElementById("login").style.display = "none";
+                    document.getElementById("loggedin").style.display = "block";
+                    
+                    enableButtons();
+               }
+               else if (result == 'Error' && message == 'The access token expired')
+               {
+                    xmlHttpRequest = new XMLHttpRequest();
+                    
+                    xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/refresh_access_token?refresh_token=' + refresh_token + 
+                        '&access_token=' + access_token +
+                        '&spotify_name=' + display_name +
+                        '&spotify_id=' + spotify_id, true);
+                    xmlHttpRequest.onreadystatechange = onUserInfoTokenExpiredRefresh;
+                    xmlHttpRequest.send();
+               }
+               else
+               {
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT);
+               }
+            }
+        }
+        
+        function onUserInfoTokenExpiredRefresh()
+        {
+            if (this.readyState == 4 && this.status == 200) {
+                var result = 'Success';
+                var message = '';
+                var jsonResponse = JSON.parse(xmlHttpRequest.response);
+                if(jsonResponse != null)
+                {
+                    if(jsonResponse.result != null)
+                    {
+                       result = jsonResponse.result;
+                    }
+                    if(jsonResponse.message != null)
+                    {
+                       message = jsonResponse.message;
+                    }
+                    if(jsonResponse.access_token != null)
+                    {
+                       access_token = jsonResponse.access_token;
+                    }
+                }
+                
+                if(result == 'Success')
+                {
+                    last_access_token_refresh = new Date(); 
+                    
+                    xmlHttpRequest = new XMLHttpRequest();
+                
+                    xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/user_info?refresh_token=' + refresh_token + '&access_token=' + access_token, true);
+                    xmlHttpRequest.onreadystatechange = onPostRefreshUserInfoReceived;
+                    xmlHttpRequest.send();
+                }
+                else if(message == 'Authentication Error')
+                {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT);
+                }
+                else
+                {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                }
+            }
+        }
+        
+        function onPostRefreshUserInfoReceived()
+        {
+            if (this.readyState == 4 && this.status == 200) {
+               var result = 'Success';
+               var jsonResponse = JSON.parse(xmlHttpRequest.response);
+               var message = "";
+               
+               if(jsonResponse != null)
+               {
+                   if(jsonResponse.result != null)
+                   {
+                       result = jsonResponse.result;
+                   }
+                   if(jsonResponse.display_name != null)
+                   {
+                       display_name = jsonResponse.display_name;
+                   }
+                   if(jsonResponse.id != null)
+                   {
+                       spotify_id = jsonResponse.id;
+                   }
+                   if(jsonResponse.message != null)
+                   {
+                       message = jsonResponse.message;
+                   }
+               }
+               
+               if(result == 'Success')
+               {
+                    document.getElementById("results1").innerHTML = "Welcome " + display_name;
+                    
+                    document.getElementById("login").style.display = "none";
+                    document.getElementById("loggedin").style.display = "block";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/#access_token=' + access_token + '&refresh_token=' + refresh_token);
+               }
+               else
+               {
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT);
+               }
+            }
+        }
+        
+        function onSubmitButtonPressed()
+        {
+            disableButtons();
+            is_manual_refresh = false;
+            tokenSafeCall(userSubmit);
+        }
+        
+        function userSubmit()
+        {
+            xmlHttpRequest = new XMLHttpRequest();
+            
+            xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/user_submit?refresh_token=' + refresh_token + 
+                '&access_token=' + access_token +
+                '&spotify_name=' + display_name +
+                '&spotify_id=' + spotify_id, true);
+            xmlHttpRequest.onreadystatechange = onSubmitComplete;
+            xmlHttpRequest.send();
+            
+            document.getElementById("results2").innerHTML = "Submitting...";
+            document.getElementById("results3").innerHTML = "";
+            document.getElementById("results4").innerHTML = "";
+            document.getElementById("results5").innerHTML = "";
+            document.getElementById("results6").innerHTML = "";
+            document.getElementById("results7").innerHTML = "";
+        }
+        
+        function onSubmitComplete(){
+            enableButtons();
+            
+            if (this.readyState == 4 && this.status == 200) {
+               var result = 'Success';
+               var jsonResponse = JSON.parse(xmlHttpRequest.response);
+               var message = '';
+               if(jsonResponse != null)
+               {
+                   if(jsonResponse.result != null)
+                   {
+                       result = jsonResponse.result;
+                   }
+                   if(jsonResponse.message != null)
+                   {
+                       message = jsonResponse.message;
+                   }
+               }
+               
+               if(result == 'Success')
+               {
+                    document.getElementById("results3").innerHTML = "Success";
+                   
+                    xmlHttpRequest = new XMLHttpRequest();
+                   
+                    xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/end/endpoint?refresh_token=' + refresh_token + 
+                        '&access_token=' + access_token +
+                        '&spotify_name=' + display_name +
+                        '&spotify_id=' + spotify_id, true);
+                    xmlHttpRequest.onreadystatechange = onCompleteDoNothing;
+                    xmlHttpRequest.send();
+               }
+               else if(result == 'Error' && message == 'Point Limit Reached')
+               {
+                    document.getElementById("results3").innerHTML = "Point limit reached, please wait until next reset before submitting again.";
+               }
+               else if(result == 'Error' && message == 'The access token expired')
+               {
+                    if(is_manual_refresh)
+                    {
+                        document.getElementById("results1").innerHTML = "An Error Occured";
+                        location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT);
+                    }
+                    else
+                    {
+                        is_manual_refresh = true;
+                        document.getElementById("results2").innerHTML += ".";
+                        last_access_token_refresh = null;
+                        tokenSafeCall(userSubmit);
+                    }
+               }
+               else
+               {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT);
+               }
+            }
+        }
+        
+        function onReportButtonPressed()
+        {
+            disableButtons();
+            tokenSafeCall(requestReport);
+        }
+        
+        function requestReport()
+        {
+            xmlHttpRequest = new XMLHttpRequest();
+           
+            xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/user_report?refresh_token=' + refresh_token + 
+                '&access_token=' + access_token +
+                '&spotify_name=' + display_name +
+                '&spotify_id=' + spotify_id, true);
+            xmlHttpRequest.onreadystatechange = onReportComplete;
+            xmlHttpRequest.send();
+            
+           document.getElementById("results2").innerHTML = "Generating Full Report...";
+           document.getElementById("results3").innerHTML = "";
+           document.getElementById("results4").innerHTML = "";
+           document.getElementById("results5").innerHTML = "";
+           document.getElementById("results6").innerHTML = "";
+           document.getElementById("results7").innerHTML = "";
+        }
+        
+        function onReportComplete(){
+            enableButtons();
+            if (this.readyState == 4 && this.status == 200) {
+               var result = 'Success';
+               var message = '';
+               var data = null;
+               var jsonResponse = JSON.parse(xmlHttpRequest.response);
+               if(jsonResponse != null)
+               {
+                   if(jsonResponse.result != null)
+                   {
+                       result = jsonResponse.result;
+                   }
+                   if(jsonResponse.message != null)
+                   {
+                       message = jsonResponse.message;
+                   }
+                   if(jsonResponse.data != null)
+                   {
+                       data = jsonResponse.data;
+                   }
+               }
+               
+               if(result == 'Success')
+               {
+                    var reportName = display_name + "report.txt";
+                    var element = document.createElement('a');
+                    
+                    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(data));
+                    element.setAttribute('download', reportName);
+                    
+                    element.style.display = 'none';
+                    document.body.appendChild(element);
+                    
+                    element.click();
+                    
+                    document.body.removeChild(element);
+                    
+                    document.getElementById("results3").innerHTML = "Success";
+               }
+               else if(message == 'Authentication Error')
+               {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT);
+               }
+               else
+               {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+               }
+            }
+        }
+        
+        function onFollowButtonPressed()
+        {
+            if(confirm("To participate in the NAS community we ask that everyone follow their fellow artists, save their song to your Spotify Library, and save the official NAS Playlists / Podcasts. We'll do this automatically for you by clicking 'OK'.  You can view the full list of NAS artists on our Discord server."))
+            {
+                disableButtons();
+                tokenSafeCall(startFollowAll);
+            }
+            else
+            {
+               document.getElementById("results2").innerHTML = "But we made it so easy";
+               document.getElementById("results3").innerHTML = "";
+               document.getElementById("results4").innerHTML = "";
+               document.getElementById("results5").innerHTML = "";
+            }
+        }
+        
+        function startFollowAll()
+        {
+            xmlHttpRequest = new XMLHttpRequest();
+           
+            xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/follow_like_report?refresh_token=' + refresh_token + 
+                '&access_token=' + access_token +
+                '&spotify_name=' + display_name +
+                '&spotify_id=' + spotify_id, true);
+            xmlHttpRequest.onreadystatechange = onFollowAllLikeReportComplete;
+            xmlHttpRequest.send();
+            
+           document.getElementById("results2").innerHTML = "Saving all NAS songs ...";
+           document.getElementById("results3").innerHTML = "Following all NAS artists ...";
+           document.getElementById("results4").innerHTML = "Following all NAS playlists ...";
+           document.getElementById("results5").innerHTML = "";
+           document.getElementById("results6").innerHTML = "";
+           document.getElementById("results7").innerHTML = "";
+        }
+        
+        function onFollowAllLikeReportComplete(){
+            if (this.readyState == 4 && this.status == 200)
+            {
+                var result = 'Success';
+                var jsonResponse = JSON.parse(xmlHttpRequest.response);
+                var errorText = "";
+                var result_text = "";
+                if(jsonResponse != null)
+                {
+                    if(jsonResponse.result != null)
+                    {
+                       result = jsonResponse.result;
+                    }
+                    if(jsonResponse.result_text != null)
+                    {
+                       result_text = jsonResponse.result_text;
+                    }
+                    if(jsonResponse.error != null)
+                    {
+                       errorText = jsonResponse.error;
+                    }
+                    if(jsonResponse.total_songs != null)
+                    {
+                       total_songs_liked = jsonResponse.total_songs;
+                    }
+                    if(jsonResponse.new_songs != null)
+                    {
+                       new_songs_liked = jsonResponse.new_songs;
+                    }
+                    if(jsonResponse.total_artists != null)
+                    {
+                       total_artists_followed = jsonResponse.total_artists;
+                    }
+                    if(jsonResponse.new_artists != null)
+                    {
+                       new_artists_followed = jsonResponse.new_artists;
+                    }
+                    if(jsonResponse.total_playlists != null)
+                    {
+                       total_playlists_followed = jsonResponse.total_playlists;
+                    }
+                    if(jsonResponse.new_playlists != null)
+                    {
+                       new_playlists_followed = jsonResponse.new_playlists;
+                    }
+                }
+                
+                if(result == 'Success')
+                {
+                    enableButtons();
+                    if(total_songs_liked != null && new_songs_liked != null)
+                    {
+                        document.getElementById("results2").innerHTML = "Saved all " + total_songs_liked + " NAS songs, " + new_songs_liked + " new songs saved";
+                    }
+                    else
+                    {
+                        document.getElementById("results2").innerHTML = "Saved all NAS songs";
+                    }
+                    
+                    if(total_artists_followed != null && new_artists_followed != null)
+                    {
+                        document.getElementById("results3").innerHTML = "Followed all " + total_artists_followed + " NAS artists, " + new_artists_followed + " new artists followed";
+                    }
+                    else
+                    {
+                        document.getElementById("results3").innerHTML = "Followed all NAS artists";
+                    }
+                    
+                    if(total_playlists_followed != null && new_playlists_followed != null)
+                    {
+                        document.getElementById("results4").innerHTML = "Followed all " + total_playlists_followed + " NAS playlists, " + new_playlists_followed + " new playlists followed";
+                    }
+                    else
+                    {
+                        document.getElementById("results4").innerHTML = "Followed all NAS playlists";
+                    }
+                    
+                    if(result_text != "")
+                    {
+                        document.getElementById("results5").innerHTML = result_text;
+                        document.getElementById("results5").style.color = "green";
+                    }
+                }
+                else
+                {
+                    enableButtons();
+                    document.getElementById("results2").innerHTML = "An Error Occured";
+                    
+                    if(result_text != "")
+                    {
+                        document.getElementById("results3").innerHTML = result_text;
+                        document.getElementById("results3").style.color = "red";
+                    }
+                    else
+                    {
+                        document.getElementById("results3").innerHTML = "";
+                    }
+                    
+                    document.getElementById("results4").innerHTML = "";
+                    document.getElementById("results5").innerHTML = "";
+                }
+            }
+        }
+        
+        // Auto Submit
+        
+        const COUNTDOWN_MINUTES = 100;
+        const SECONDS_IN_MINUTE = 60;
+        const MAX_AUTO_SUBMITS = 8;
+        const COUNTDOWN_RANDOM_EXTRA = 10;
+        
+        var myTimeout = null;
+        var countdownMinutes = COUNTDOWN_MINUTES;
+        var countdownSeconds = SECONDS_IN_MINUTE;
+        var isSubmitting = false;
+        var autoSubmitCount = 0;
+        
+        function tokenSafeCall(callback)
+        {
+            if(shouldRefreshAccessToken())
+            {
+                document.getElementById("results2").innerHTML = "Processing...";
+                document.getElementById("results3").innerHTML = "";
+                document.getElementById("results4").innerHTML = "";
+                document.getElementById("results5").innerHTML = "";
+                document.getElementById("results6").innerHTML = "";
+                document.getElementById("results7").innerHTML = "";
+                
+                refreshAccessToken(callback);
+            }
+            else
+            {
+                callback();
+            }
+        }
+        
+        function shouldRefreshAccessToken()
+        {
+            var currentdate = new Date(); 
+                
+            if(last_access_token_refresh != null)
+            {
+                var seconds = (currentdate.getTime() - last_access_token_refresh.getTime()) / 1000;
+                
+                return (seconds > (50 * 60)); // Update refresh token if older than 55 minutes
+            }
+            else
+            {
+                last_access_token_refresh = currentdate;
+                return true;
+            }
+        }
+        
+        function refreshAccessToken(onCompleteCallback)
+        {
+            post_refresh_update_callback = onCompleteCallback;
+            
+            xmlHttpRequest = new XMLHttpRequest();
+           
+            xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/refresh_access_token?refresh_token=' + refresh_token + 
+                '&access_token=' + access_token +
+                '&spotify_name=' + display_name +
+                '&spotify_id=' + spotify_id, true);
+            xmlHttpRequest.onreadystatechange = onRefreshAccessTokenComplete;
+            xmlHttpRequest.send();
+        }
+        
+        function onRefreshAccessTokenComplete(){
+            if (this.readyState == 4 && this.status == 200) {
+                var result = 'Success';
+                var message = '';
+                var jsonResponse = JSON.parse(xmlHttpRequest.response);
+                if(jsonResponse != null)
+                {
+                    if(jsonResponse.result != null)
+                    {
+                       result = jsonResponse.result;
+                    }
+                    if(jsonResponse.message != null)
+                    {
+                       message = jsonResponse.message;
+                    }
+                    if(jsonResponse.access_token != null)
+                    {
+                       access_token = jsonResponse.access_token;
+                    }
+                }
+                
+                if(result == 'Success')
+                {
+                    last_access_token_refresh = new Date(); 
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/#access_token=' + access_token + '&refresh_token=' + refresh_token);
+                    
+                    if(post_refresh_update_callback != null)
+                    {
+                        post_refresh_update_callback();
+                        post_refresh_update_callback = null;
+                    }
+                }
+                else if(message == 'Authentication Error')
+                {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT);
+                }
+                else
+                {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                }
+            }
+        }
+        
+        function onAutoSubmitButtonPressed()
+        {
+            if(isSubmitting)
+            {
+                // Already submitting so cancel
+                document.getElementById("autoSubmitButton").innerHTML = "Auto Submit";
+                document.getElementById("results2").innerHTML = "Auto Submit Cancelled";
+                document.getElementById("results3").innerHTML = "";
+                document.getElementById("results4").innerHTML = "";
+                document.getElementById("results5").innerHTML = "";
+                document.getElementById("results6").innerHTML = "";
+                document.getElementById("results7").innerHTML = "";
+                
+                clearTimeout(myTimeout);
+                
+                isSubmitting = false;
+            }
+            else
+            {
+                disableButtons();
+                is_manual_refresh = false;
+                tokenSafeCall(startAutoSubmit);
+            }
+        }
+        
+        function startAutoSubmit()
+        {
+            autoSubmitCount = 0;
+            
+            document.getElementById("results2").innerHTML = "Submitting...";
+            document.getElementById("results3").innerHTML = "";
+            document.getElementById("results4").innerHTML = "";
+            document.getElementById("results5").innerHTML = "";
+            document.getElementById("results6").innerHTML = "";
+            document.getElementById("results7").innerHTML = "";
+            
+            xmlHttpRequest = new XMLHttpRequest();
+           
+            xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/user_submit?refresh_token=' + refresh_token + 
+                '&access_token=' + access_token +
+                '&spotify_name=' + display_name +
+                '&spotify_id=' + spotify_id, true);
+            xmlHttpRequest.onreadystatechange = onAutoSubmitComplete;
+            xmlHttpRequest.send();
+            
+            isSubmitting = true;
+        }
+        
+        function onAutoSubmitComplete()
+        {
+            document.getElementById("autoSubmitButton").innerHTML  = "Stop Auto Submit";
+            enableButtons();
+            
+            if (this.readyState == 4 && this.status == 200) {
+               var result = 'Success';
+               var message = '';
+               var jsonResponse = JSON.parse(xmlHttpRequest.response);
+               if(jsonResponse != null)
+               {
+                   if(jsonResponse.result != null)
+                   {
+                       result = jsonResponse.result;
+                   }
+                   if(jsonResponse.message != null)
+                   {
+                       message = jsonResponse.message;
+                   }
+               }
+               
+               if(result == 'Success')
+               {
+                    document.getElementById("results3").innerHTML = "Success";
+                    onSubmitSingleReset();
+               }
+               else if(result == 'Error' && message == 'Point Limit Reached')
+               {
+                    document.getElementById("results3").innerHTML = "Point limit reached, please wait until next reset before submitting again.";
+                    document.getElementById("autoSubmitButton").innerHTML = "Auto Submit";
+                    isSubmitting = false;
+               }
+               else if(result == 'Error' && message == 'The access token expired')
+               {
+                    if(is_manual_refresh)
+                    {
+                        document.getElementById("results1").innerHTML = "An Error Occured";
+                        location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT);
+                    }
+                    else
+                    {
+                        is_manual_refresh = true;
+                        document.getElementById("results2").innerHTML += ".";
+                        last_access_token_refresh = null;
+                        tokenSafeCall(startAutoSubmit);
+                    }
+               }
+               else
+               {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT);
+               }
+            }
+        }
+        
+        function scheduleNextSubmitUpdate()
+        {
+            if(countdownMinutes == 1)
+            {
+                if(countdownSeconds > 1)
+                {
+                    countdownSeconds--;
+                    document.getElementById("results2").innerHTML = "Submitting again in " + countdownSeconds + " seconds";
+                    var submitsLeft = MAX_AUTO_SUBMITS - autoSubmitCount + 1;
+                    document.getElementById("results3").innerHTML = "Submits remaining until timeout:" + submitsLeft;
+                    myTimeout = setTimeout(scheduleNextSubmitUpdate, 1000); // Schedule next for 1 second
+                }
+                else
+                {
+                    tokenSafeCall(submitSingle);
+                }
+            }
+            else if(countdownMinutes > 1)
+            {
+                document.getElementById("results2").innerHTML = "Submitting again in " + countdownMinutes + " minutes";
+                var submitsLeft = MAX_AUTO_SUBMITS - autoSubmitCount + 1;
+                document.getElementById("results3").innerHTML = "Submits remaining until timeout:" + submitsLeft;
+                countdownMinutes--;
+                myTimeout = setTimeout(scheduleNextSubmitUpdate, 60000); // Schedule next for 1 minute
+            }
+            else
+            {
+                tokenSafeCall(submitSingle);
+            }
+        }
+        
+        function onSubmitSingleReset()
+        {
+            countdownMinutes = COUNTDOWN_MINUTES + Math.floor(Math.random() * COUNTDOWN_RANDOM_EXTRA);
+            countdownSeconds = SECONDS_IN_MINUTE;
+            ++autoSubmitCount;
+            
+            myTimeout = setTimeout(scheduleNextSubmitUpdate, 2000); // Schedule next for 2 seconds
+            
+            xmlHttpRequest = new XMLHttpRequest();
+                   
+            xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/end/endpoint?refresh_token=' + refresh_token + 
+                '&access_token=' + access_token +
+                '&spotify_name=' + display_name +
+                '&spotify_id=' + spotify_id, true);
+            xmlHttpRequest.onreadystatechange = onCompleteDoNothing;
+            xmlHttpRequest.send();
+        }
+        
+        function onCompleteDoNothing()
+        {
+        }
+        
+        function submitSingle()
+        {
+            xmlHttpRequest = new XMLHttpRequest();
+           
+            xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/user_submit?refresh_token=' + refresh_token + 
+                '&access_token=' + access_token +
+                '&spotify_name=' + display_name +
+                '&spotify_id=' + spotify_id, true);
+            xmlHttpRequest.onreadystatechange = onSubmitSingleComplete;
+            xmlHttpRequest.send();
+            
+           document.getElementById("results2").innerHTML = "Submitting...";
+           document.getElementById("results3").innerHTML = "";
+           document.getElementById("results4").innerHTML = "";
+           document.getElementById("results5").innerHTML = "";
+           document.getElementById("results6").innerHTML = "";
+           document.getElementById("results7").innerHTML = "";
+        }
+        
+        function onSubmitSingleComplete()
+        {
+            if (this.readyState == 4 && this.status == 200) {
+                var result = 'Success';
+                var message = '';
+                var jsonResponse = JSON.parse(xmlHttpRequest.response);
+                if(jsonResponse != null)
+                {
+                    if(jsonResponse.result != null)
+                    {
+                       result = jsonResponse.result;
+                    }
+                    if(jsonResponse.message != null)
+                    {
+                       message = jsonResponse.message;
+                    }
+                }
+                
+                if(result == 'Success')
+                {
+                    if(autoSubmitCount >= MAX_AUTO_SUBMITS)
+                    {
+                        isSubmitting = false;
+                        document.getElementById("autoSubmitButton").innerHTML = "Auto Submit";
+                        document.getElementById("results3").innerHTML = "Max Auto Submits Reached";
+                        document.getElementById("results4").innerHTML = "Click the Auto Submit button to start a new batch";
+                    }
+                    else
+                    {
+                        document.getElementById("results3").innerHTML = "Success";
+                        onSubmitSingleReset();
+                    }
+                }
+                else if(result == 'Error' && message == 'Point Limit Reached')
+                {
+                    document.getElementById("results3").innerHTML = "Point limit reached, please wait until next reset before submitting again.";
+                    document.getElementById("autoSubmitButton").innerHTML = "Auto Submit";
+                    isSubmitting = false;
+                }
+                else
+                {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT);
+                }
+            }
+        }
+        
+        function onLogoutButtonPressed()
+        {
+            const url = 'https://www.spotify.com/logout/';
+            const spotifyLogoutWindow = window.open(url, 'Spotify Logout', 'width=700,height=500,top=40,left=40');
+            setTimeout(() => 
+            {
+                spotifyLogoutWindow.close();
+                location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT);
+            }, 1000);
+        }
+        
+    </script>
+  </body>
+</html>

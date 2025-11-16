@@ -1,0 +1,1807 @@
+<!doctype html>
+<html>
+  <head>
+    <title>NAS Admin Console</title>
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+    <style type="text/css">
+        #login {
+            display: block;
+        }
+        #loggedin{
+            display: none;
+        }
+        .text-overflow {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            width: 500px;
+        }
+        hr.dashed {
+            border-top: 3px dashed #bbb;
+        }
+    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  </head>
+
+  <body onload="onBodyLoaded()">
+    <div class="container">
+      <h1>NAS Admin Console</h1>
+      <div id="login">
+        <h3 id="welcomeMessage"></h3>
+        <a id="loginButton" href="https://spotifyfollow.a2hosted.com/" onclick="location.href=this.href+ENVIRONMENT+'/'+PAGE+'_login';return false;" class="btn btn-primary">Login</a><br/>
+      </div>
+      <div id="loggedin">
+        <h3 id="results1"></h3>
+        <a id="logoutButton" onClick="onLogoutPressed()" class="btn btn-primary">Logout</a>
+        <hr class="dashed">
+        <h3 id="results1">What would you like to do?</h3>
+        
+        <input type="radio" id="report" onclick="radioClicked(this.value)" name="task" value="GetFullReport">
+        <label for="report">Get Full Report For User</label><br>
+        <input type="radio" id="leaderboard" onclick="radioClicked(this.value)" name="task" value="PrintLeaderboard">
+        <label for="leaderboard">Print Leaderboard</label><br>
+        <input type="radio" id="bonusPointsToUser" onclick="radioClicked(this.value)" name="task" value="AddBonusPointsToUser">
+        <label for="bonusPointsToUser">Add Bonus Points To User</label><br>
+        <input type="radio" id="bonusPointsToRole" onclick="radioClicked(this.value)" name="task" value="AddBonusPointsToRole">
+        <label for="bonusPointsToRole">Add Bonus Points To Role</label><br>
+        <input type="radio" id="removeBonusPoints" onclick="radioClicked(this.value)" name="task" value="RemoveBonusPoints">
+        <label for="removeBonusPoints">Remove Bonus Points</label><br>
+        <input type="radio" id="databaseAdmin" onclick="radioClicked(this.value)" name="task" value="DatabaseAdmin">
+        <label for="databaseAdmin">Database Admin</label><br>
+        <input type="radio" id="artistLink" onclick="radioClicked(this.value)" name="task" value="ArtistLink">
+        <label for="artistLink">Artist Linking</label><br>
+        <input type="radio" id="printTierToDiscord" onclick="radioClicked(this.value)" name="task" value="PrintTierToDiscord">
+        <label for="printTierToDiscord">Print Tier User List</label><br>
+        
+        <hr class="dashed" id="choiceDash">
+        
+        <h3 id="taskDescription"></h3>
+        <div id="DiscordIdDiv">
+            <label for="discordid_box">Discord User Id</label>
+            <input type="text" id="discordid_box" name="discordid_box" value=""><br/>
+        </div>
+        <div id="UserSelectDiv">
+            <input type="radio" id="tierAll" onclick="userTierRadioClicked(this.value)" name="tier" value="tierAll" checked>
+            <label for="tierAll">All</label><br>
+            <input type="radio" id="tier0" onclick="userTierRadioClicked(this.value)" name="tier" value="tier0">
+            <label for="tier0">Tier 0</label><br>
+            <input type="radio" id="tier1" onclick="userTierRadioClicked(this.value)" name="tier" value="tier1">
+            <label for="tier1">Tier 1</label><br>
+            <input type="radio" id="tier2" onclick="userTierRadioClicked(this.value)" name="tier" value="tier2">
+            <label for="tier2">Tier 2</label><br>
+            <input type="radio" id="tier3" onclick="userTierRadioClicked(this.value)" name="tier" value="tier3">
+            <label for="tier3">Tier 3</label><br>
+            <input type="radio" id="tier4" onclick="userTierRadioClicked(this.value)" name="tier" value="tier4">
+            <label for="tier4">Tier 4</label><br>
+            <input type="radio" id="tier5" onclick="userTierRadioClicked(this.value)" name="tier" value="tier5">
+            <label for="tier5">Tier 5</label><br>
+            <input type="radio" id="tier6" onclick="userTierRadioClicked(this.value)" name="tier" value="tier6">
+            <label for="tier6">Tier 6</label><br>
+            <input type="radio" id="tier7" onclick="userTierRadioClicked(this.value)" name="tier" value="tier7">
+            <label for="tier7">Tier 7</label><br>
+            <input type="radio" id="tier8" onclick="userTierRadioClicked(this.value)" name="tier" value="tier8">
+            <label for="tier8">Tier 8</label><br>
+            <input type="radio" id="mods" onclick="userTierRadioClicked(this.value)" name="tier" value="mods">
+            <label for="mods">Mods</label><br>
+            
+            <label for="discordUsers">Discord User</label>
+            <select name="discordUsers" id="discordUsers" onchange="onDiscordUserSelected()">
+            </select><br/>
+        </div>
+        <div id="FullReportDiv">
+            <input type="radio" id="currentweek" onclick="weekClicked(this.value)" name="week" value="CurrentWeek" checked>
+            <label for="currentweek">Current Week</label><br>
+            <input type="radio" id="previousweek" onclick="weekClicked(this.value)" name="week" value="PreviousWeek">
+            <label for="previousweek">Previous Week</label><br>
+            <input type="radio" id="twoweeksago" onclick="weekClicked(this.value)" name="week" value="TwoWeeksAgo">
+            <label for="twoweeksago">Two Weeks Ago</label><br>
+            <button id="fullReport" onClick="onFullReportButtonPressed()" class="btn btn-primary">Get Full Report</button>
+        </div>
+        <div id="PrintLeaderboardDiv">
+            <label for="leaderboardlength">Length of Leaderboard</label>
+            <input type="text" id="leaderboardlength" name="leaderboardlength" value="10"><br/>
+            <button id="printLeaderboard" onClick="onPrintLeaderboardButtonPressed()" class="btn btn-primary">Print Leaderboard To Discord</button>
+        </div>
+        <div id="AddBonusPointsToUserDiv">
+            <label for="pointsamount_box">Points Amount</label>
+            <input type="text" id="pointsamount_box" name="pointsamount_box" value=""><br/>
+            <label for="pointsreason_box">Reason For Bonus Points</label>
+            <input type="text" id="pointsreason_box" name="pointsreason_box" value=""><br/>
+            <button id="bonusPointsToUserButton" onClick="onBonusPointsToUserButtonPressed()" class="btn btn-primary">Add Bonus Points</button>
+        </div>
+        <div id="AddBonusPointsToRoleDiv">
+            <label for="discordRoles">Discord Role</label>
+            <select name="discordRoles" id="discordRoles" onchange="onDiscordRolesSelected()">
+            </select><br/>
+            <label for="rolepointsamount_box">Points Amount</label>
+            <input type="text" id="rolepointsamount_box" name="rolepointsamount_box" value=""><br/>
+            <label for="rolepointsreason_box">Reason For Bonus Points</label>
+            <input type="text" id="rolepointsreason_box" name="rolepointsreason_box" value=""><br/>
+            <button id="bonusPointsToRoleButton" onClick="onBonusPointsToRoleButtonPressed()" class="btn btn-primary">Add Bonus Points</button>
+        </div>
+        <div id="RemoveBonusPointsDiv">
+            <label for="removepointsreason_box">Reason For Bonus Points</label>
+            <input type="text" id="removepointsreason_box" name="removepointsreason_box" value=""><br/>
+            <button id="removeBonusPointsButton" onClick="onRemoveBonusPointsButtonPressed()" class="btn btn-primary">Remove Bonus Points</button>
+        </div>
+        <div id="DatabaseAdminDiv">
+            <input type="radio" id="addEntry" onclick="databaseActionRadioClicked(this.value)" name="databaseAction" value="AddEntry" checked>
+            <label for="addEntry">Add Spotify To Discord Link</label><br>
+            <input type="radio" id="removeEntry" onclick="databaseActionRadioClicked(this.value)" name="databaseAction" value="RemoveEntry">
+            <label for="removeEntry">Remove Spotify To Discord Link</label><br>
+            <input type="radio" id="printSpotifyToDiscordTable" onclick="databaseActionRadioClicked(this.value)" name="databaseAction" value="PrintSpotifyToDiscordTable">
+            <label for="printSpotifyToDiscordTable">Print Spotify To Discord Link Table</label><br>
+            
+            <div id="DatabaseSpotifyDiv">
+                <label for="databaseSpotifyIdBox">Spotify User Id</label>
+                <input type="text" id="databaseSpotifyIdBox" name="databaseSpotifyIdBox" value=""><br/>
+            </div>
+            
+            <div id="DatabaseDiscordDiv">
+                <label for="databaseDiscordIdBox">Discord User Id</label>
+                <input type="text" id="databaseDiscordIdBox" name="databaseDiscordIdBox" value=""><br/>
+            </div>
+            
+            <button id="databaseActionButton" onClick="onDatabaseActionButtonPressed()" class="btn btn-primary">Process</button>
+        </div>
+        <div id="ArtistLinkDiv">
+            <input type="radio" id="linkArtist" onclick="artistLinkRadioClicked(this.value)" name="artistLink" value="LinkArtist" checked>
+            <label for="linkArtist">Link Artist</label><br>
+            <input type="radio" id="unlinkArtist" onclick="artistLinkRadioClicked(this.value)" name="artistLink" value="UnlinkArtist">
+            <label for="unlinkArtist">Unlink Artist</label><br>
+            <input type="radio" id="printArtistLinkTable" onclick="artistLinkRadioClicked(this.value)" name="artistLink" value="PrintArtistLinkTable">
+            <label for="printArtistLinkTable">Print Artist Link Table</label><br>
+            <input type="radio" id="printUnlinkedArtists" onclick="artistLinkRadioClicked(this.value)" name="artistLink" value="PrintUnlinkedArtists">
+            <label for="printUnlinkedArtists">Print Unlinked Artists</label><br>
+            
+            <div id="ArtistLinkSpotifyDiv">
+                <label for="artistLinkSpotifyIdBox">Spotify Artist Id</label>
+                <input type="text" id="artistLinkSpotifyIdBox" name="artistLinkSpotifyIdBox" value=""><br/>
+            </div>
+            
+            <div id="ArtistLinkDiscordDiv">
+                <label for="artistLinkDiscordIdBox">Discord User Id</label>
+                <input type="text" id="artistLinkDiscordIdBox" name="artistLinkDiscordIdBox" value=""><br/>
+            </div>
+            
+            <div id="ArtistLinkTierDiv">
+                <h4 id="artistLinkTierLabel">Select Tier</h4>
+                <input type="radio" id="tierAll" onclick="artistLinkTierRadioClicked(this.value)" name="tier" value="tierAll" checked>
+                <label for="tierAll">All</label><br>
+                <input type="radio" id="tier0" onclick="artistLinkTierRadioClicked(this.value)" name="tier" value="tier0">
+                <label for="tier0">Tier 0</label><br>
+                <input type="radio" id="tier1" onclick="artistLinkTierRadioClicked(this.value)" name="tier" value="tier1">
+                <label for="tier1">Tier 1</label><br>
+                <input type="radio" id="tier2" onclick="artistLinkTierRadioClicked(this.value)" name="tier" value="tier2">
+                <label for="tier2">Tier 2</label><br>
+                <input type="radio" id="tier3" onclick="artistLinkTierRadioClicked(this.value)" name="tier" value="tier3">
+                <label for="tier3">Tier 3</label><br>
+                <input type="radio" id="tier4" onclick="artistLinkTierRadioClicked(this.value)" name="tier" value="tier4">
+                <label for="tier4">Tier 4</label><br>
+                <input type="radio" id="tier5" onclick="artistLinkTierRadioClicked(this.value)" name="tier" value="tier5">
+                <label for="tier5">Tier 5</label><br>
+                <input type="radio" id="tier6" onclick="artistLinkTierRadioClicked(this.value)" name="tier" value="tier6">
+                <label for="tier6">Tier 6</label><br>
+                <input type="radio" id="tier7" onclick="artistLinkTierRadioClicked(this.value)" name="tier" value="tier7">
+                <label for="tier7">Tier 7</label><br>
+                <input type="radio" id="tier8" onclick="artistLinkTierRadioClicked(this.value)" name="tier" value="tier8">
+                <label for="tier8">Tier 8</label><br>
+                <input type="radio" id="mods" onclick="artistLinkTierRadioClicked(this.value)" name="tier" value="mods">
+                <label for="mods">Mods</label><br>
+            </div>
+            
+            <button id="artistLinkButton" onClick="onArtistLinkButtonPressed()" class="btn btn-primary">Process</button>
+        </div>
+        <div id="PrintTierDiv">
+            <label for="tier_box">Tier</label>
+            <input type="text" id="tier_box" name="tier_box" value="0"><br/>
+            <button id="printTierToDiscordButton" onClick="onPrintTierToDiscordButtonPressed()" class="btn btn-primary">Print Tier To Discord</button>
+        </div>
+        
+        <hr class="dashed" id="resultsDash">
+        <h3 id="results2"></h3>
+        <h3 id="results3"></h3>
+        <h3 id="results4"></h3>
+        <h3 id="results5"></h3>
+        <h3 id="results6"></h3>
+        <h3 id="results7"></h3>
+      </div>
+    </div>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0-alpha.1/handlebars.min.js"></script>
+    <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+
+    <script>
+        
+        function getEnvironmentFromURL()
+        {
+            var prefix = "https://spotifyfollow.a2hosted.com/";
+            var url = window.location.href;
+            var sections = url.split('/');
+            return sections[3];
+        }
+        
+        function getPageFromURL()
+        {
+            var prefix = "https://spotifyfollow.a2hosted.com/";
+            var url = window.location.href;
+            var sections = url.split('/');
+            return sections[4];
+        }
+        
+        var ENVIRONMENT = getEnvironmentFromURL();
+        var PAGE = getPageFromURL();
+        
+        var xmlHttpRequest = new XMLHttpRequest();
+        
+        var access_token = null;
+        var refresh_token = null;
+        var display_name = null;
+        var spotify_id = null;
+        var total_songs_liked = null;
+        var new_songs_liked = null;
+        var total_artists_followed = null;
+        var new_artists_followed = null;
+        var total_playlists_followed = null;
+        var new_playlists_followed = null;
+        var total_episodes_saved = null;
+        var new_episodes_saved = null;
+        var total_shows_saved = null;
+        var new_shows_saved = null;
+        var previous_week = 0;
+        var userTier = -1;
+        var artistTier = -1;
+        var discordIds = null;
+        var currentDiscordIds = [];
+        var discordRoles = null;
+        var databaseAction = null;
+        var artistLinkAction = null;
+        
+        var last_access_token_refresh = null;
+        var post_refresh_update_callback = null;
+    
+        function getHashParams() {
+            var hashParams = {};
+            var e, r = /([^&;=]+)=?([^&;]*)/g,
+              q = window.location.hash.substring(1);
+            while ( e = r.exec(q)) {
+             hashParams[e[1]] = decodeURIComponent(e[2]);
+            }
+            return hashParams;
+        }
+        
+        function disableButtons()
+        {
+            document.getElementById("fullReport").disabled = true;
+            document.getElementById("printLeaderboard").disabled = true;
+            document.getElementById("bonusPointsToUserButton").disabled = true;
+            document.getElementById("bonusPointsToRoleButton").disabled = true;
+            document.getElementById("databaseActionButton").disabled = true;
+            document.getElementById("printTierToDiscordButton").disabled = true;
+        }
+        
+        function enableButtons()
+        {
+            document.getElementById("fullReport").disabled = false;
+            document.getElementById("printLeaderboard").disabled = false;
+            document.getElementById("bonusPointsToUserButton").disabled = false;
+            document.getElementById("bonusPointsToRoleButton").disabled = false;
+            document.getElementById("databaseActionButton").disabled = false;
+            document.getElementById("printTierToDiscordButton").disabled = false;
+        }
+    
+        function onBodyLoaded()
+        {
+            document.getElementById("welcomeMessage").innerHTML = "Hi";
+                
+            var params = getHashParams();
+            
+            if(params.access_token != null && params.refresh_token != null)
+            {
+                last_access_token_refresh = new Date();
+                
+                access_token = params.access_token;
+                refresh_token = params.refresh_token;
+                
+                document.getElementById("welcomeMessage").innerHTML = "";
+                document.getElementById("loginButton").style.visibility = "hidden";
+                
+                xmlHttpRequest = new XMLHttpRequest();
+                
+                xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE + '_user_info?refresh_token=' + refresh_token + '&access_token=' + access_token, true);
+                xmlHttpRequest.onreadystatechange = onUserInfoReceived;
+                xmlHttpRequest.send();
+            }
+            else
+            {
+                document.getElementById("welcomeMessage").innerHTML = "Click the login button to sign in with Spotify, and have access to all the NAS tools";
+        
+                document.getElementById("login").style.display = "block";
+                document.getElementById("loggedin").style.display = "none";
+            }
+        }
+        
+        function onUserInfoReceived(){
+               
+            if (this.readyState == 4 && this.status == 200) {
+               var result = 'Success';
+               var jsonResponse = JSON.parse(xmlHttpRequest.response);
+               if(jsonResponse != null)
+               {
+                   if(jsonResponse.result != null)
+                   {
+                       result = jsonResponse.result;
+                   }
+                   if(jsonResponse.display_name != null)
+                   {
+                       display_name = jsonResponse.display_name;
+                   }
+                   if(jsonResponse.id != null)
+                   {
+                       spotify_id = jsonResponse.id;
+                   }
+               }
+               
+               if(result == 'Success')
+               {
+                    document.getElementById("results1").innerHTML = "Welcome " + display_name;
+                    
+                    document.getElementById("login").style.display = "none";
+                    document.getElementById("loggedin").style.display = "block";
+                    document.getElementById("DiscordIdDiv").style.display = "none";
+                    document.getElementById("UserSelectDiv").style.display = "none";
+                    document.getElementById("FullReportDiv").style.display = "none";
+                    document.getElementById("PrintLeaderboardDiv").style.display = "none";
+                    document.getElementById("AddBonusPointsToUserDiv").style.display = "none";
+                    document.getElementById("AddBonusPointsToRoleDiv").style.display = "none";
+                    document.getElementById("RemoveBonusPointsDiv").style.display = "none";
+                    document.getElementById("DatabaseAdminDiv").style.display = "none";
+                    document.getElementById("ArtistLinkDiv").style.display = "none";
+                    document.getElementById("PrintTierDiv").style.display = "none";
+                    
+                    document.getElementById("DatabaseSpotifyDiv").style.display = "block";
+                    document.getElementById("DatabaseDiscordDiv").style.display = "block";
+                    
+                    document.getElementById("resultsDash").style.visibility = "hidden";
+                    document.getElementById("choiceDash").style.visibility = "hidden";
+               }
+               else
+               {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE);
+               }
+            }
+        }
+        
+        function tokenSafeCall(callback)
+        {
+            if(shouldRefreshAccessToken())
+            {
+                document.getElementById("results2").innerHTML = "Processing...";
+                document.getElementById("results3").innerHTML = "";
+                document.getElementById("results4").innerHTML = "";
+                document.getElementById("results5").innerHTML = "";
+                document.getElementById("results6").innerHTML = "";
+                document.getElementById("results7").innerHTML = "";
+                
+                refreshAccessToken(callback);
+            }
+            else
+            {
+                callback();
+            }
+        }
+        
+        function shouldRefreshAccessToken()
+        {
+            var currentdate = new Date(); 
+                
+            if(last_access_token_refresh != null)
+            {
+                var seconds = (currentdate.getTime() - last_access_token_refresh.getTime()) / 1000;
+                
+                return (seconds > (50 * 60)); // Update refresh token if older than 55 minutes
+            }
+            else
+            {
+                last_access_token_refresh = currentdate;
+                return true;
+            }
+        }
+        
+        function refreshAccessToken(onCompleteCallback)
+        {
+            post_refresh_update_callback = onCompleteCallback;
+            
+            xmlHttpRequest = new XMLHttpRequest();
+           
+            xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/refresh_access_token?refresh_token=' + refresh_token + 
+                '&access_token=' + access_token +
+                '&spotify_name=' + display_name +
+                '&spotify_id=' + spotify_id, true);
+            xmlHttpRequest.onreadystatechange = onRefreshAccessTokenComplete;
+            xmlHttpRequest.send();
+        }
+        
+        function onRefreshAccessTokenComplete(){
+            if (this.readyState == 4 && this.status == 200) {
+                var result = 'Success';
+                var message = '';
+                var jsonResponse = JSON.parse(xmlHttpRequest.response);
+                if(jsonResponse != null)
+                {
+                    if(jsonResponse.result != null)
+                    {
+                       result = jsonResponse.result;
+                    }
+                    if(jsonResponse.message != null)
+                    {
+                       message = jsonResponse.message;
+                    }
+                    if(jsonResponse.access_token != null)
+                    {
+                       access_token = jsonResponse.access_token;
+                    }
+                }
+                
+                if(result == 'Success')
+                {
+                    last_access_token_refresh = new Date(); 
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE + '/#access_token=' + access_token + '&refresh_token=' + refresh_token);
+                    
+                    if(post_refresh_update_callback != null)
+                    {
+                        post_refresh_update_callback();
+                        post_refresh_update_callback = null;
+                    }
+                }
+                else if(message == 'Authentication Error')
+                {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE);
+                }
+                else
+                {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                }
+            }
+        }
+        
+        function onDiscordIdsComplete(){
+            if (this.readyState == 4 && this.status == 200) {
+               var result = 'Success';
+               var message = '';
+               var data = null;
+               var jsonResponse = JSON.parse(xmlHttpRequest.response);
+               if(jsonResponse != null)
+               {
+                   if(jsonResponse.result != null)
+                   {
+                       result = jsonResponse.result;
+                   }
+                   if(jsonResponse.message != null)
+                   {
+                       message = jsonResponse.message;
+                   }
+                   if(jsonResponse.data != null)
+                   {
+                       discordIds = jsonResponse.data;
+                   }
+               }
+               
+               if(discordIds != null)
+               {
+                    var discordUserDropdown = document.getElementById('discordUsers');
+                    var index = 0;
+                    
+                    currentDiscordIds = [];
+                        
+                    discordIds.forEach(result => {
+                        if(userTier == -1 || userTier == result[2])
+                        {
+                            currentDiscordIds.push(result[0]);
+                            discordUserDropdown.options[index] = new Option(result[1], result[1]);
+                            index++;
+                        }
+                    });
+               }
+               
+               if(result != 'Success')
+               {
+                   if(message == 'Authentication Error')
+                   {
+                        document.getElementById("results1").innerHTML = "An Error Occured";
+                        location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE);
+                   }
+                   else
+                   {
+                        document.getElementById("results1").innerHTML = "Error retrieving Discord Ids";
+                   }
+               }
+            }
+        }
+        
+        function onDiscordRolesComplete(){
+            if (this.readyState == 4 && this.status == 200) {
+               var result = 'Success';
+               var message = '';
+               var data = null;
+               var jsonResponse = JSON.parse(xmlHttpRequest.response);
+               if(jsonResponse != null)
+               {
+                   if(jsonResponse.result != null)
+                   {
+                       result = jsonResponse.result;
+                   }
+                   if(jsonResponse.message != null)
+                   {
+                       message = jsonResponse.message;
+                   }
+                   if(jsonResponse.data != null)
+                   {
+                       discordRoles = jsonResponse.data;
+                   }
+               }
+               
+               if(discordRoles != null)
+               {
+                    var discordRolesDropdown = document.getElementById('discordRoles');
+                    var index = 0;
+                        
+                    discordRoles.forEach(result => {
+                        discordRolesDropdown.options[index] = new Option(result[1], result[1]);
+                        index++;
+                    });
+               }
+               
+               if(result != 'Success')
+               {
+                   if(message == 'Authentication Error')
+                   {
+                        document.getElementById("results1").innerHTML = "An Error Occured";
+                        location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE);
+                   }
+                   else
+                   {
+                        document.getElementById("results1").innerHTML = "Error retrieving Discord Ids";
+                   }
+               }
+            }
+        }
+        
+        function userTierRadioClicked(tier)
+        {
+            if(tier == "tier0")
+            {
+                userTier = 0;
+            }
+            else if(tier == "tier1")
+            {
+                userTier = 1;
+            }
+            else if(tier == "tier2")
+            {
+                userTier = 2;
+            }
+            else if(tier == "tier3")
+            {
+                userTier = 3;
+            }
+            else if(tier == "tier4")
+            {
+                userTier = 4;
+            }
+            else if(tier == "tier5")
+            {
+                userTier = 5;
+            }
+            else if(tier == "tier6")
+            {
+                userTier = 6;
+            }
+            else if(tier == "tier7")
+            {
+                userTier = 7;
+            }
+            else if(tier == "tier8")
+            {
+                userTier = 8;
+            }
+            else if(tier == "tierAll")
+            {
+                userTier = -1;
+            }
+            else if(tier == "mods")
+            {
+                userTier = 9;
+            }
+            
+            if(discordIds != null)
+            {
+                var discordUserDropdown = document.getElementById('discordUsers');
+                var index = 0;
+                
+                currentDiscordIds = [];
+                
+                var i, L = discordUserDropdown.options.length - 1;
+                for(i = L; i >= 0; i--) {
+                    discordUserDropdown.remove(i);
+                }
+                    
+                discordIds.forEach(result => {
+                    if(userTier == -1 || userTier == result[2])
+                    {
+                        currentDiscordIds.push(result[0]);
+                        discordUserDropdown.options[index] = new Option(result[1], result[1]);
+                        index++;
+                    }
+                });
+            }
+            else
+            {
+                xmlHttpRequest = new XMLHttpRequest();
+                
+                xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/get_discord_ids?refresh_token=' + refresh_token + 
+                    '&access_token=' + access_token +
+                    '&spotify_name=' + display_name +
+                    '&spotify_id=' + spotify_id, true);
+                xmlHttpRequest.onreadystatechange = onDiscordIdsComplete;
+                xmlHttpRequest.send();
+            }
+        }
+        
+        function artistLinkTierRadioClicked(tier)
+        {
+            if(tier == "tier0")
+            {
+                artistTier = 0;
+            }
+            else if(tier == "tier1")
+            {
+                artistTier = 1;
+            }
+            else if(tier == "tier2")
+            {
+                artistTier = 2;
+            }
+            else if(tier == "tier3")
+            {
+                artistTier = 3;
+            }
+            else if(tier == "tier4")
+            {
+                artistTier = 4;
+            }
+            else if(tier == "tier5")
+            {
+                artistTier = 5;
+            }
+            else if(tier == "tier6")
+            {
+                artistTier = 6;
+            }
+            else if(tier == "tier7")
+            {
+                artistTier = 7;
+            }
+            else if(tier == "tier8")
+            {
+                artistTier = 8;
+            }
+            else if(tier == "tierAll")
+            {
+                artistTier = -1;
+            }
+            else if(tier == "mods")
+            {
+                artistTier = 9;
+            }
+        }
+        
+        function radioClicked(task){
+            document.getElementById("choiceDash").style.visibility = "visible";
+            document.getElementById("resultsDash").style.visibility = "hidden";
+            document.getElementById("results2").innerHTML = "";
+            document.getElementById("results3").innerHTML = "";
+            document.getElementById("results4").innerHTML = "";
+            document.getElementById("results5").innerHTML = "";
+            document.getElementById("results6").innerHTML = "";
+            document.getElementById("results7").innerHTML = "";
+            
+            if(task == "GetFullReport")
+            {
+                document.getElementById("taskDescription").innerHTML = "Get a full report with all of a users regular points and bonus points for the week";
+                document.getElementById("UserSelectDiv").style.display = "block";
+                document.getElementById("FullReportDiv").style.display = "block";
+                document.getElementById("PrintLeaderboardDiv").style.display = "none";
+                document.getElementById("AddBonusPointsToUserDiv").style.display = "none";
+                document.getElementById("AddBonusPointsToRoleDiv").style.display = "none";
+                document.getElementById("RemoveBonusPointsDiv").style.display = "none";
+                document.getElementById("DatabaseAdminDiv").style.display = "none";
+                document.getElementById("ArtistLinkDiv").style.display = "none";
+                document.getElementById("PrintTierDiv").style.display = "none";
+                
+                if(discordIds == null)
+                {
+                    xmlHttpRequest = new XMLHttpRequest();
+                    
+                    xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/get_discord_ids?refresh_token=' + refresh_token + 
+                        '&access_token=' + access_token +
+                        '&spotify_name=' + display_name +
+                        '&spotify_id=' + spotify_id, true);
+                    xmlHttpRequest.onreadystatechange = onDiscordIdsComplete;
+                    xmlHttpRequest.send();
+                }
+            }
+            else if(task == "PrintLeaderboard")
+            {
+                document.getElementById("taskDescription").innerHTML = "Print the points leaderboard to discord";
+                document.getElementById("DiscordIdDiv").style.display = "none";
+                document.getElementById("UserSelectDiv").style.display = "none";
+                document.getElementById("FullReportDiv").style.display = "none";
+                document.getElementById("PrintLeaderboardDiv").style.display = "block";
+                document.getElementById("AddBonusPointsToUserDiv").style.display = "none";
+                document.getElementById("AddBonusPointsToRoleDiv").style.display = "none";
+                document.getElementById("RemoveBonusPointsDiv").style.display = "none";
+                document.getElementById("DatabaseAdminDiv").style.display = "none";
+                document.getElementById("ArtistLinkDiv").style.display = "none";
+                document.getElementById("PrintTierDiv").style.display = "none";
+            }
+            else if(task == "AddBonusPointsToUser")
+            {
+                document.getElementById("taskDescription").innerHTML = "Add bonus points to a specific user";
+                document.getElementById("DiscordIdDiv").style.display = "none";
+                document.getElementById("UserSelectDiv").style.display = "block";
+                document.getElementById("FullReportDiv").style.display = "none";
+                document.getElementById("PrintLeaderboardDiv").style.display = "none";
+                document.getElementById("AddBonusPointsToUserDiv").style.display = "block";
+                document.getElementById("AddBonusPointsToRoleDiv").style.display = "none";
+                document.getElementById("RemoveBonusPointsDiv").style.display = "none";
+                document.getElementById("DatabaseAdminDiv").style.display = "none";
+                document.getElementById("ArtistLinkDiv").style.display = "none";
+                document.getElementById("PrintTierDiv").style.display = "none";
+                
+                if(discordIds == null)
+                {
+                    xmlHttpRequest = new XMLHttpRequest();
+                    
+                    xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/get_discord_ids?refresh_token=' + refresh_token + 
+                        '&access_token=' + access_token +
+                        '&spotify_name=' + display_name +
+                        '&spotify_id=' + spotify_id, true);
+                    xmlHttpRequest.onreadystatechange = onDiscordIdsComplete;
+                    xmlHttpRequest.send();
+                }
+            }
+            else if(task == "AddBonusPointsToRole")
+            {
+                document.getElementById("taskDescription").innerHTML = "Add bonus points to everyone who has the given role";
+                document.getElementById("DiscordIdDiv").style.display = "none";
+                document.getElementById("UserSelectDiv").style.display = "none";
+                document.getElementById("FullReportDiv").style.display = "none";
+                document.getElementById("PrintLeaderboardDiv").style.display = "none";
+                document.getElementById("AddBonusPointsToUserDiv").style.display = "none";
+                document.getElementById("AddBonusPointsToRoleDiv").style.display = "block";
+                document.getElementById("RemoveBonusPointsDiv").style.display = "none";
+                document.getElementById("DatabaseAdminDiv").style.display = "none";
+                document.getElementById("ArtistLinkDiv").style.display = "none";
+                document.getElementById("PrintTierDiv").style.display = "none";
+                
+                if(discordRoles == null)
+                {
+                    xmlHttpRequest = new XMLHttpRequest();
+                   
+                    xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/get_discord_roles?refresh_token=' + refresh_token + 
+                        '&access_token=' + access_token +
+                        '&spotify_name=' + display_name +
+                        '&spotify_id=' + spotify_id, true);
+                    xmlHttpRequest.onreadystatechange = onDiscordRolesComplete;
+                    xmlHttpRequest.send();
+                }
+            }
+            else if(task == "RemoveBonusPoints")
+            {
+                document.getElementById("taskDescription").innerHTML = "Remove all bonus points with the given reason";
+                document.getElementById("DiscordIdDiv").style.display = "none";
+                document.getElementById("UserSelectDiv").style.display = "none";
+                document.getElementById("FullReportDiv").style.display = "none";
+                document.getElementById("PrintLeaderboardDiv").style.display = "none";
+                document.getElementById("AddBonusPointsToUserDiv").style.display = "none";
+                document.getElementById("AddBonusPointsToRoleDiv").style.display = "none";
+                document.getElementById("RemoveBonusPointsDiv").style.display = "block";
+                document.getElementById("DatabaseAdminDiv").style.display = "none";
+                document.getElementById("ArtistLinkDiv").style.display = "none";
+                document.getElementById("PrintTierDiv").style.display = "none";
+            }
+            else if(task == "DatabaseAdmin")
+            {
+                databaseAction = "AddEntry";
+                document.getElementById("addEntry").checked = true;
+                document.getElementById("DatabaseSpotifyDiv").style.display = "block";
+                document.getElementById("DatabaseDiscordDiv").style.display = "block";
+                
+                document.getElementById("taskDescription").innerHTML = "Manage the account linking database";
+                document.getElementById("DiscordIdDiv").style.display = "none";
+                document.getElementById("UserSelectDiv").style.display = "none";
+                document.getElementById("FullReportDiv").style.display = "none";
+                document.getElementById("PrintLeaderboardDiv").style.display = "none";
+                document.getElementById("AddBonusPointsToUserDiv").style.display = "none";
+                document.getElementById("AddBonusPointsToRoleDiv").style.display = "none";
+                document.getElementById("RemoveBonusPointsDiv").style.display = "none";
+                document.getElementById("DatabaseAdminDiv").style.display = "block";
+                document.getElementById("ArtistLinkDiv").style.display = "none";
+                document.getElementById("PrintTierDiv").style.display = "none";
+            }
+            else if(task == "ArtistLink")
+            {
+                artistLinkAction = "LinkArtist";
+                document.getElementById("linkArtist").checked = true;
+                document.getElementById("DatabaseSpotifyDiv").style.display = "block";
+                document.getElementById("DatabaseDiscordDiv").style.display = "block";
+                
+                document.getElementById("taskDescription").innerHTML = "Add a spotify artists account";
+                document.getElementById("DiscordIdDiv").style.display = "none";
+                document.getElementById("UserSelectDiv").style.display = "none";
+                document.getElementById("FullReportDiv").style.display = "none";
+                document.getElementById("PrintLeaderboardDiv").style.display = "none";
+                document.getElementById("AddBonusPointsToUserDiv").style.display = "none";
+                document.getElementById("AddBonusPointsToRoleDiv").style.display = "none";
+                document.getElementById("RemoveBonusPointsDiv").style.display = "none";
+                document.getElementById("DatabaseAdminDiv").style.display = "none";
+                document.getElementById("ArtistLinkDiv").style.display = "block";
+                document.getElementById("ArtistLinkTierDiv").style.display = "none";
+                document.getElementById("PrintTierDiv").style.display = "none";
+            }
+            else if(task == "PrintTierToDiscord")
+            {
+                document.getElementById("taskDescription").innerHTML = "Print a list of everyone in a tier to discord";
+                document.getElementById("DiscordIdDiv").style.display = "none";
+                document.getElementById("UserSelectDiv").style.display = "none";
+                document.getElementById("FullReportDiv").style.display = "none";
+                document.getElementById("PrintLeaderboardDiv").style.display = "none";
+                document.getElementById("AddBonusPointsToUserDiv").style.display = "none";
+                document.getElementById("AddBonusPointsToRoleDiv").style.display = "none";
+                document.getElementById("RemoveBonusPointsDiv").style.display = "none";
+                document.getElementById("DatabaseAdminDiv").style.display = "none";
+                document.getElementById("ArtistLinkDiv").style.display = "none";
+                document.getElementById("PrintTierDiv").style.display = "block";
+            }
+        }
+        
+        function weekClicked(week)
+        {
+            if(week == "CurrentWeek")
+            {
+                previous_week = 0;
+            }
+            else if(week == "PreviousWeek")
+            {
+                previous_week = 1;
+            }
+            else if(week == "TwoWeeksAgo")
+            {
+                previous_week = 2;
+            }
+        }
+        
+        function databaseActionRadioClicked(dbAction)
+        {
+            databaseAction = dbAction;
+            
+            if(databaseAction == "AddEntry")
+            {
+                document.getElementById("DatabaseSpotifyDiv").style.display = "block";
+                document.getElementById("DatabaseDiscordDiv").style.display = "block";
+            }
+            else if(databaseAction == "RemoveEntry")
+            {
+                document.getElementById("DatabaseSpotifyDiv").style.display = "block";
+                document.getElementById("DatabaseDiscordDiv").style.display = "none";
+            }
+            else if(databaseAction == "PrintSpotifyToDiscordTable")
+            {
+                document.getElementById("DatabaseSpotifyDiv").style.display = "none";
+                document.getElementById("DatabaseDiscordDiv").style.display = "none";
+            }
+        }
+        
+        function artistLinkRadioClicked(dbAction)
+        {
+            artistLinkAction = dbAction;
+            
+            if(artistLinkAction == "LinkArtist")
+            {
+                document.getElementById("ArtistLinkSpotifyDiv").style.display = "block";
+                document.getElementById("ArtistLinkDiscordDiv").style.display = "block";
+                document.getElementById("ArtistLinkTierDiv").style.display = "none";
+            }
+            else if(artistLinkAction == "UnlinkArtist")
+            {
+                document.getElementById("ArtistLinkSpotifyDiv").style.display = "block";
+                document.getElementById("ArtistLinkDiscordDiv").style.display = "block";
+                document.getElementById("ArtistLinkTierDiv").style.display = "none";
+            }
+            else if(artistLinkAction == "PrintArtistLinkTable")
+            {
+                document.getElementById("ArtistLinkSpotifyDiv").style.display = "none";
+                document.getElementById("ArtistLinkDiscordDiv").style.display = "none";
+                document.getElementById("ArtistLinkTierDiv").style.display = "none";
+            }
+            else if(artistLinkAction == "PrintUnlinkedArtists")
+            {
+                document.getElementById("ArtistLinkSpotifyDiv").style.display = "none";
+                document.getElementById("ArtistLinkDiscordDiv").style.display = "none";
+                document.getElementById("ArtistLinkTierDiv").style.display = "block";
+            }
+        }
+        
+        function onFullReportButtonPressed()
+        {
+            disableButtons();
+            tokenSafeCall(getFullReport);
+        }
+        
+        function getFullReport()
+        {
+            var discord_user_index = document.getElementById('discordUsers').selectedIndex;
+            var discordId = currentDiscordIds[discord_user_index];
+            xmlHttpRequest = new XMLHttpRequest();
+           
+            xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/user_report?refresh_token=' + refresh_token + 
+                '&access_token=' + access_token +
+                '&spotify_name=' + display_name +
+                '&spotify_id=' + spotify_id +
+                '&discord_id=' + discordId +
+                '&previous_week=' + previous_week, true);
+            xmlHttpRequest.onreadystatechange = onFullReportComplete;
+            xmlHttpRequest.send();
+            
+            document.getElementById("resultsDash").style.visibility = "visible";
+            document.getElementById("results2").innerHTML = "Generating Full Report...";
+            document.getElementById("results3").innerHTML = "";
+            document.getElementById("results4").innerHTML = "";
+            document.getElementById("results5").innerHTML = "";
+            document.getElementById("results6").innerHTML = "";
+            document.getElementById("results7").innerHTML = "";
+        }
+        
+        function onFullReportComplete()
+        {
+            enableButtons();
+            
+            if (this.readyState == 4 && this.status == 200)
+            {
+               var result = 'Success';
+               var message = '';
+               var data = null;
+               var jsonResponse = JSON.parse(xmlHttpRequest.response);
+               if(jsonResponse != null)
+               {
+                   if(jsonResponse.result != null)
+                   {
+                       result = jsonResponse.result;
+                   }
+                   if(jsonResponse.message != null)
+                   {
+                       message = jsonResponse.message;
+                   }
+                   if(jsonResponse.data != null)
+                   {
+                       data = jsonResponse.data;
+                   }
+               }
+               
+               if(result == 'Success')
+               {
+                    var element = document.createElement('a');
+                    
+                    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(data));
+                    element.setAttribute('download', "downloads.txt");
+                    
+                    element.style.display = 'none';
+                    document.body.appendChild(element);
+                    
+                    element.click();
+                    
+                    document.body.removeChild(element);
+                    
+                    document.getElementById("results3").innerHTML = "Success";
+               }
+               else if(message == 'Authentication Error')
+               {
+                    document.getElementById("results3").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE);
+               }
+               else
+               {
+                    document.getElementById("results3").innerHTML = "An Error Occured";
+               }
+            }
+        }
+        
+        function onPrintLeaderboardButtonPressed()
+        {
+            disableButtons();
+            tokenSafeCall(printLeaderboard);
+        }
+        
+        function printLeaderboard()
+        {
+            var leaderboardLength = document.getElementById("leaderboardlength").value;
+            xmlHttpRequest = new XMLHttpRequest();
+           
+            xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/print_leaderboard?refresh_token=' + refresh_token + 
+                '&access_token=' + access_token +
+                '&spotify_name=' + display_name +
+                '&spotify_id=' + spotify_id +
+                '&leaderboard_length=' + leaderboardLength, true);
+            xmlHttpRequest.onreadystatechange = onPrintLeaderboardComplete;
+            xmlHttpRequest.send();
+            
+            document.getElementById("resultsDash").style.visibility = "visible";
+            document.getElementById("results2").innerHTML = "Printing Leaderboard...";
+            document.getElementById("results3").innerHTML = "";
+            document.getElementById("results4").innerHTML = "";
+            document.getElementById("results5").innerHTML = "";
+            document.getElementById("results6").innerHTML = "";
+            document.getElementById("results7").innerHTML = "";
+        }
+        
+        function onPrintLeaderboardComplete()
+        {
+            enableButtons();
+            
+            if (this.readyState == 4 && this.status == 200)
+            {
+               var result = 'Success';
+               var message = '';
+               var data = null;
+               var jsonResponse = JSON.parse(xmlHttpRequest.response);
+               if(jsonResponse != null)
+               {
+                   if(jsonResponse.result != null)
+                   {
+                       result = jsonResponse.result;
+                   }
+                   if(jsonResponse.message != null)
+                   {
+                       message = jsonResponse.message;
+                   }
+                   if(jsonResponse.data != null)
+                   {
+                       data = jsonResponse.data;
+                   }
+               }
+               
+               if(result == 'Success')
+               {
+                    document.getElementById("results3").innerHTML = "Success";
+               }
+               else if(message == 'Authentication Error')
+               {
+                    document.getElementById("results3").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE);
+               }
+               else
+               {
+                    document.getElementById("results3").innerHTML = "An Error Occured";
+               }
+            }
+        }
+        
+        function onBonusPointsToUserButtonPressed()
+        {
+            disableButtons();
+            tokenSafeCall(grantBonusPointsToUser);
+        }
+        
+        function grantBonusPointsToUser()
+        {
+            var discord_user_index = document.getElementById('discordUsers').selectedIndex;
+            var discordId = currentDiscordIds[discord_user_index];
+            var pointsReason = document.getElementById("pointsreason_box").value;
+            var pointsAmount = document.getElementById("pointsamount_box").value;
+            
+            xmlHttpRequest = new XMLHttpRequest();
+            
+            xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/add_bonus_points?refresh_token=' + refresh_token + 
+                '&access_token=' + access_token +
+                '&spotify_name=' + display_name +
+                '&spotify_id=' + spotify_id +
+                '&discord_id=' + discordId +
+                '&points_reason=' + pointsReason +
+                '&points_amount=' + pointsAmount, true);
+                
+            xmlHttpRequest.onreadystatechange = onAddBonusPointsComplete;
+            xmlHttpRequest.send();
+            
+            document.getElementById("resultsDash").style.visibility = "visible";
+            document.getElementById("results2").innerHTML = "Adding Bonus Points...";
+            document.getElementById("results3").innerHTML = "";
+            document.getElementById("results4").innerHTML = "";
+            document.getElementById("results5").innerHTML = "";
+            document.getElementById("results6").innerHTML = "";
+            document.getElementById("results7").innerHTML = "";
+        }
+        
+        function onBonusPointsToRoleButtonPressed()
+        {
+            disableButtons();
+            tokenSafeCall(grantBonusPointsToRole);
+        }
+        
+        function grantBonusPointsToRole()
+        {
+            var discord_role_index = document.getElementById('discordRoles').selectedIndex;
+            var discordId = discordRoles[discord_role_index][0];
+            var pointsReason = document.getElementById("rolepointsreason_box").value;
+            var pointsAmount = document.getElementById("rolepointsamount_box").value;
+            
+            xmlHttpRequest = new XMLHttpRequest();
+            
+            xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/add_bonus_points?refresh_token=' + refresh_token + 
+                '&access_token=' + access_token +
+                '&spotify_name=' + display_name +
+                '&spotify_id=' + spotify_id +
+                '&discord_id=' + discordId +
+                '&points_reason=' + pointsReason +
+                '&points_amount=' + pointsAmount, true);
+                
+            xmlHttpRequest.onreadystatechange = onAddBonusPointsComplete;
+            xmlHttpRequest.send();
+            
+            document.getElementById("resultsDash").style.visibility = "visible";
+            document.getElementById("results2").innerHTML = "Adding Bonus Points...";
+            document.getElementById("results3").innerHTML = "";
+            document.getElementById("results4").innerHTML = "";
+            document.getElementById("results5").innerHTML = "";
+            document.getElementById("results6").innerHTML = "";
+            document.getElementById("results7").innerHTML = "";
+        }
+        
+        function onAddBonusPointsComplete()
+        {
+            enableButtons();
+            
+            if (this.readyState == 4 && this.status == 200)
+            {
+               var result = 'Success';
+               var message = '';
+               var data = null;
+               var jsonResponse = JSON.parse(xmlHttpRequest.response);
+               if(jsonResponse != null)
+               {
+                   if(jsonResponse.result != null)
+                   {
+                       result = jsonResponse.result;
+                   }
+                   if(jsonResponse.message != null)
+                   {
+                       message = jsonResponse.message;
+                   }
+                   if(jsonResponse.data != null)
+                   {
+                       data = jsonResponse.data;
+                   }
+               }
+               
+               if(result == 'Success')
+               {
+                    document.getElementById("results3").innerHTML = "Success";
+               }
+               else if(message == 'Authentication Error')
+               {
+                    document.getElementById("results3").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE);
+               }
+               else
+               {
+                    document.getElementById("results3").innerHTML = "An Error Occured";
+               }
+            }
+        }
+        
+        function onRemoveBonusPointsButtonPressed()
+        {
+            disableButtons();
+            tokenSafeCall(removeBonusPoints);
+        }
+        
+        function removeBonusPoints()
+        {
+            var pointsReason = document.getElementById("removepointsreason_box").value;
+            
+            xmlHttpRequest = new XMLHttpRequest();
+            
+            xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/remove_bonus_points?refresh_token=' + refresh_token + 
+                '&access_token=' + access_token +
+                '&spotify_name=' + display_name +
+                '&spotify_id=' + spotify_id +
+                '&points_reason=' + pointsReason, true);
+                
+            xmlHttpRequest.onreadystatechange = onRemoveBonusPointsComplete;
+            xmlHttpRequest.send();
+            
+            document.getElementById("resultsDash").style.visibility = "visible";
+            document.getElementById("results2").innerHTML = "Removing Bonus Points " + pointsReason + " ...";
+            document.getElementById("results3").innerHTML = "";
+            document.getElementById("results4").innerHTML = "";
+            document.getElementById("results5").innerHTML = "";
+            document.getElementById("results6").innerHTML = "";
+            document.getElementById("results7").innerHTML = "";
+        }
+        
+        function onRemoveBonusPointsComplete()
+        {
+            enableButtons();
+            
+            if (this.readyState == 4 && this.status == 200)
+            {
+               var result = 'Success';
+               var message = '';
+               var data = null;
+               var jsonResponse = JSON.parse(xmlHttpRequest.response);
+               if(jsonResponse != null)
+               {
+                   if(jsonResponse.result != null)
+                   {
+                       result = jsonResponse.result;
+                   }
+                   if(jsonResponse.message != null)
+                   {
+                       message = jsonResponse.message;
+                   }
+                   if(jsonResponse.data != null)
+                   {
+                       data = jsonResponse.data;
+                   }
+               }
+               
+               if(result == 'Success')
+               {
+                    document.getElementById("results3").innerHTML = "Success";
+               }
+               else if(message == 'Authentication Error')
+               {
+                    document.getElementById("results3").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE);
+               }
+               else
+               {
+                    document.getElementById("results3").innerHTML = "An Error Occured";
+               }
+            }
+        }
+        
+        
+        
+        function onDatabaseActionButtonPressed()
+        {
+            disableButtons();
+            tokenSafeCall(doDatabaseAction);
+        }
+        
+        function doDatabaseAction()
+        {
+            if(databaseAction == "AddEntry")
+            {
+                var linkDiscordId = document.getElementById("databaseDiscordIdBox").value;
+                var linkSpotifyId = document.getElementById("databaseSpotifyIdBox").value;
+                
+                xmlHttpRequest = new XMLHttpRequest();
+                
+                xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/link_discord_to_spotify?refresh_token=' + refresh_token + 
+                    '&access_token=' + access_token +
+                    '&spotify_name=' + display_name +
+                    '&spotify_id=' + spotify_id +
+                    '&link_discord_id=' + linkDiscordId +
+                    '&link_spotify_id=' + linkSpotifyId, true);
+                    
+                xmlHttpRequest.onreadystatechange = onLinkDiscordToSpotifyComplete;
+                xmlHttpRequest.send();
+                
+                document.getElementById("resultsDash").style.visibility = "visible";
+                document.getElementById("results2").innerHTML = "Linking Accounts...";
+                document.getElementById("results3").innerHTML = "";
+                document.getElementById("results4").innerHTML = "";
+                document.getElementById("results5").innerHTML = "";
+                document.getElementById("results6").innerHTML = "";
+                document.getElementById("results7").innerHTML = "";
+            }
+            else if(databaseAction == "RemoveEntry")
+            {
+                var linkSpotifyId = document.getElementById("databaseSpotifyIdBox").value;
+                
+                xmlHttpRequest = new XMLHttpRequest();
+                
+                xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/unlink_discord_to_spotify?refresh_token=' + refresh_token + 
+                    '&access_token=' + access_token +
+                    '&spotify_name=' + display_name +
+                    '&spotify_id=' + spotify_id +
+                    '&link_spotify_id=' + linkSpotifyId, true);
+                    
+                xmlHttpRequest.onreadystatechange = onLinkDiscordToSpotifyComplete;
+                xmlHttpRequest.send();
+                
+                document.getElementById("resultsDash").style.visibility = "visible";
+                document.getElementById("results2").innerHTML = "Unlinking Accounts...";
+                document.getElementById("results3").innerHTML = "";
+                document.getElementById("results4").innerHTML = "";
+                document.getElementById("results5").innerHTML = "";
+                document.getElementById("results6").innerHTML = "";
+                document.getElementById("results7").innerHTML = "";
+            }
+            else if(databaseAction == "PrintSpotifyToDiscordTable")
+            {
+                xmlHttpRequest = new XMLHttpRequest();
+                
+                xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/print_spotify_to_discord_table?refresh_token=' + refresh_token + 
+                    '&access_token=' + access_token +
+                    '&spotify_name=' + display_name +
+                    '&spotify_id=' + spotify_id, true);
+                    
+                xmlHttpRequest.onreadystatechange = onPrintSpotifyToDiscordTableComplete;
+                xmlHttpRequest.send();
+                
+                document.getElementById("resultsDash").style.visibility = "visible";
+                document.getElementById("results2").innerHTML = "Printing Spotify To Discord Table...";
+                document.getElementById("results3").innerHTML = "";
+                document.getElementById("results4").innerHTML = "";
+                document.getElementById("results5").innerHTML = "";
+                document.getElementById("results6").innerHTML = "";
+                document.getElementById("results7").innerHTML = "";
+            }
+        }
+        
+        function onLinkDiscordToSpotifyComplete()
+        {
+            enableButtons();
+            
+            if (this.readyState == 4 && this.status == 200)
+            {
+               var result = 'Success';
+               var message = '';
+               var data = null;
+               var jsonResponse = JSON.parse(xmlHttpRequest.response);
+               if(jsonResponse != null)
+               {
+                   if(jsonResponse.result != null)
+                   {
+                       result = jsonResponse.result;
+                   }
+                   if(jsonResponse.message != null)
+                   {
+                       message = jsonResponse.message;
+                   }
+                   if(jsonResponse.data != null)
+                   {
+                       data = jsonResponse.data;
+                   }
+               }
+               
+               if(result == 'Success')
+               {
+                    document.getElementById("results3").innerHTML = "Success";
+               }
+               else if(message == 'Authentication Error')
+               {
+                    document.getElementById("results3").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE);
+               }
+               else if(message == "DiscordId Invalid")
+               {
+                    document.getElementById("results3").innerHTML = "DiscordId is invalid or not connected to NAS Server";
+               }
+               else if(message == "SpotifyId Invalid")
+               {
+                    document.getElementById("results3").innerHTML = "SpotifyId is invalid";
+               }
+               else
+               {
+                    document.getElementById("results3").innerHTML = "An Error Occured";
+                    document.getElementById("results4").innerHTML = message;
+               }
+            }
+        }
+        
+        function onPrintSpotifyToDiscordTableComplete()
+        {
+            enableButtons();
+            
+            if (this.readyState == 4 && this.status == 200)
+            {
+               var result = 'Success';
+               var message = '';
+               var data = null;
+               var jsonResponse = JSON.parse(xmlHttpRequest.response);
+               if(jsonResponse != null)
+               {
+                   if(jsonResponse.result != null)
+                   {
+                       result = jsonResponse.result;
+                   }
+                   if(jsonResponse.message != null)
+                   {
+                       message = jsonResponse.message;
+                   }
+                   if(jsonResponse.data != null)
+                   {
+                       data = jsonResponse.data;
+                   }
+               }
+               
+               if(result == 'Success')
+               {
+                    var element = document.createElement('a');
+                    
+                    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(data));
+                    element.setAttribute('download', "spotifytodiscord.txt");
+                    
+                    element.style.display = 'none';
+                    document.body.appendChild(element);
+                    
+                    element.click();
+                    
+                    document.body.removeChild(element);
+                    
+                    document.getElementById("results3").innerHTML = "Success";
+               }
+               else if(message == 'Authentication Error')
+               {
+                    document.getElementById("results3").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE);
+               }
+               else
+               {
+                    document.getElementById("results3").innerHTML = "An Error Occured";
+               }
+            }
+        }
+        
+        function onArtistLinkButtonPressed()
+        {
+            disableButtons();
+            tokenSafeCall(doArtistLink);
+        }
+        
+        function doArtistLink()
+        {
+            if(artistLinkAction == "LinkArtist")
+            {
+                var linkDiscordId = document.getElementById("artistLinkDiscordIdBox").value;
+                var linkSpotifyId = document.getElementById("artistLinkSpotifyIdBox").value;
+                
+                xmlHttpRequest = new XMLHttpRequest();
+                
+                xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/link_discord_to_artist?refresh_token=' + refresh_token + 
+                    '&access_token=' + access_token +
+                    '&spotify_name=' + display_name +
+                    '&spotify_id=' + spotify_id +
+                    '&link_discord_id=' + linkDiscordId +
+                    '&link_spotify_id=' + linkSpotifyId, true);
+                    
+                xmlHttpRequest.onreadystatechange = onLinkDiscordToArtistComplete;
+                xmlHttpRequest.send();
+                
+                document.getElementById("resultsDash").style.visibility = "visible";
+                document.getElementById("results2").innerHTML = "Linking Accounts...";
+                document.getElementById("results3").innerHTML = "";
+                document.getElementById("results4").innerHTML = "";
+                document.getElementById("results5").innerHTML = "";
+                document.getElementById("results6").innerHTML = "";
+                document.getElementById("results7").innerHTML = "";
+            }
+            else if(artistLinkAction == "UnlinkArtist")
+            {
+                var linkDiscordId = document.getElementById("artistLinkDiscordIdBox").value;
+                var linkSpotifyId = document.getElementById("artistLinkSpotifyIdBox").value;
+                
+                xmlHttpRequest = new XMLHttpRequest();
+                
+                xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/unlink_discord_to_artist?refresh_token=' + refresh_token + 
+                    '&access_token=' + access_token +
+                    '&spotify_name=' + display_name +
+                    '&spotify_id=' + spotify_id +
+                    '&link_discord_id=' + linkDiscordId +
+                    '&link_spotify_id=' + linkSpotifyId, true);
+                    
+                xmlHttpRequest.onreadystatechange = onLinkDiscordToArtistComplete;
+                xmlHttpRequest.send();
+                
+                document.getElementById("resultsDash").style.visibility = "visible";
+                document.getElementById("results2").innerHTML = "Unlinking Accounts...";
+                document.getElementById("results3").innerHTML = "";
+                document.getElementById("results4").innerHTML = "";
+                document.getElementById("results5").innerHTML = "";
+                document.getElementById("results6").innerHTML = "";
+                document.getElementById("results7").innerHTML = "";
+            }
+            else if(artistLinkAction == "PrintArtistLinkTable")
+            {
+                xmlHttpRequest = new XMLHttpRequest();
+                
+                xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/print_artist_to_discord_table?refresh_token=' + refresh_token + 
+                    '&access_token=' + access_token +
+                    '&spotify_name=' + display_name +
+                    '&spotify_id=' + spotify_id, true);
+                    
+                xmlHttpRequest.onreadystatechange = onPrintArtistToDiscordTableComplete;
+                xmlHttpRequest.send();
+                
+                document.getElementById("resultsDash").style.visibility = "visible";
+                document.getElementById("results2").innerHTML = "Printing Artist To Discord Table...";
+                document.getElementById("results3").innerHTML = "";
+                document.getElementById("results4").innerHTML = "";
+                document.getElementById("results5").innerHTML = "";
+                document.getElementById("results6").innerHTML = "";
+                document.getElementById("results7").innerHTML = "";
+            }
+            else if(artistLinkAction == "PrintUnlinkedArtists")
+            {
+                xmlHttpRequest = new XMLHttpRequest();
+                
+                xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/print_unlinked_artists?refresh_token=' + refresh_token + 
+                    '&access_token=' + access_token +
+                    '&spotify_name=' + display_name +
+                    '&spotify_id=' + spotify_id +
+                    '&tier=' + artistTier, true);
+                    
+                xmlHttpRequest.onreadystatechange = onPrintUnlinkedArtistListComplete;
+                xmlHttpRequest.send();
+                
+                document.getElementById("resultsDash").style.visibility = "visible";
+                document.getElementById("results2").innerHTML = "Printing Unlinked Artists...";
+                document.getElementById("results3").innerHTML = "";
+                document.getElementById("results4").innerHTML = "";
+                document.getElementById("results5").innerHTML = "";
+                document.getElementById("results6").innerHTML = "";
+                document.getElementById("results7").innerHTML = "";
+            }
+        }
+        
+        function onLinkDiscordToArtistComplete()
+        {
+            enableButtons();
+            
+            if (this.readyState == 4 && this.status == 200)
+            {
+               var result = 'Success';
+               var message = '';
+               var data = null;
+               var jsonResponse = JSON.parse(xmlHttpRequest.response);
+               if(jsonResponse != null)
+               {
+                   if(jsonResponse.result != null)
+                   {
+                       result = jsonResponse.result;
+                   }
+                   if(jsonResponse.message != null)
+                   {
+                       message = jsonResponse.message;
+                   }
+                   if(jsonResponse.data != null)
+                   {
+                       data = jsonResponse.data;
+                   }
+               }
+               
+               if(result == 'Success')
+               {
+                    document.getElementById("results3").innerHTML = "Success";
+               }
+               else if(message == 'Authentication Error')
+               {
+                    document.getElementById("results3").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE);
+               }
+               else if(message == "DiscordId Invalid")
+               {
+                    document.getElementById("results3").innerHTML = "DiscordId is invalid or not connected to NAS Server";
+               }
+               else if(message == "SpotifyId Invalid")
+               {
+                    document.getElementById("results3").innerHTML = "SpotifyId is invalid";
+               }
+               else
+               {
+                    document.getElementById("results3").innerHTML = "An Error Occured";
+                    document.getElementById("results4").innerHTML = message;
+               }
+            }
+        }
+        
+        function onPrintArtistToDiscordTableComplete()
+        {
+            enableButtons();
+            
+            if (this.readyState == 4 && this.status == 200)
+            {
+               var result = 'Success';
+               var message = '';
+               var data = null;
+               var jsonResponse = JSON.parse(xmlHttpRequest.response);
+               if(jsonResponse != null)
+               {
+                   if(jsonResponse.result != null)
+                   {
+                       result = jsonResponse.result;
+                   }
+                   if(jsonResponse.message != null)
+                   {
+                       message = jsonResponse.message;
+                   }
+                   if(jsonResponse.data != null)
+                   {
+                       data = jsonResponse.data;
+                   }
+               }
+               
+               if(result == 'Success')
+               {
+                    var element = document.createElement('a');
+                    
+                    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(data));
+                    element.setAttribute('download', "artisttodiscord.txt");
+                    
+                    element.style.display = 'none';
+                    document.body.appendChild(element);
+                    
+                    element.click();
+                    
+                    document.body.removeChild(element);
+                    
+                    document.getElementById("results3").innerHTML = "Success";
+               }
+               else if(message == 'Authentication Error')
+               {
+                    document.getElementById("results3").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE);
+               }
+               else
+               {
+                    document.getElementById("results3").innerHTML = "An Error Occured";
+               }
+            }
+        }
+        
+        function onPrintUnlinkedArtistListComplete()
+        {
+            enableButtons();
+            
+            if (this.readyState == 4 && this.status == 200)
+            {
+               var result = 'Success';
+               var message = '';
+               var data = null;
+               var jsonResponse = JSON.parse(xmlHttpRequest.response);
+               if(jsonResponse != null)
+               {
+                   if(jsonResponse.result != null)
+                   {
+                       result = jsonResponse.result;
+                   }
+                   if(jsonResponse.message != null)
+                   {
+                       message = jsonResponse.message;
+                   }
+                   if(jsonResponse.data != null)
+                   {
+                       data = jsonResponse.data;
+                   }
+               }
+               
+               if(result == 'Success')
+               {
+                    var element = document.createElement('a');
+                    
+                    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(data));
+                    element.setAttribute('download', "unlinkedArtists.txt");
+                    
+                    element.style.display = 'none';
+                    document.body.appendChild(element);
+                    
+                    element.click();
+                    
+                    document.body.removeChild(element);
+                    
+                    document.getElementById("results3").innerHTML = "Success";
+               }
+               else if(message == 'Authentication Error')
+               {
+                    document.getElementById("results3").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE);
+               }
+               else
+               {
+                    document.getElementById("results3").innerHTML = "An Error Occured";
+               }
+            }
+        }
+        
+        function onPrintTierToDiscordButtonPressed()
+        {
+            disableButtons();
+            tokenSafeCall(printTierToDiscord);
+        }
+        
+        function printTierToDiscord()
+        {
+            var tier = document.getElementById("tier_box").value;
+            
+            xmlHttpRequest = new XMLHttpRequest();
+            
+            xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/print_tier?refresh_token=' + refresh_token + 
+                '&access_token=' + access_token +
+                '&spotify_name=' + display_name +
+                '&spotify_id=' + spotify_id +
+                '&tier=' + tier, true);
+                
+            xmlHttpRequest.onreadystatechange = onPrintTierToDiscordComplete;
+            xmlHttpRequest.send();
+            
+            document.getElementById("resultsDash").style.visibility = "visible";
+            document.getElementById("results2").innerHTML = "Printing tier...";
+            document.getElementById("results3").innerHTML = "";
+            document.getElementById("results4").innerHTML = "";
+            document.getElementById("results5").innerHTML = "";
+            document.getElementById("results6").innerHTML = "";
+            document.getElementById("results7").innerHTML = "";
+        }
+        
+        function onPrintTierToDiscordComplete()
+        {
+            enableButtons();
+            
+            if (this.readyState == 4 && this.status == 200)
+            {
+               var result = 'Success';
+               var message = '';
+               var data = null;
+               var jsonResponse = JSON.parse(xmlHttpRequest.response);
+               if(jsonResponse != null)
+               {
+                   if(jsonResponse.result != null)
+                   {
+                       result = jsonResponse.result;
+                   }
+                   if(jsonResponse.message != null)
+                   {
+                       message = jsonResponse.message;
+                   }
+                   if(jsonResponse.data != null)
+                   {
+                       data = jsonResponse.data;
+                   }
+               }
+               
+               if(result == 'Success')
+               {
+                    document.getElementById("results3").innerHTML = "Success";
+               }
+               else if(message == 'Authentication Error')
+               {
+                    document.getElementById("results3").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE);
+               }
+               else
+               {
+                    document.getElementById("results3").innerHTML = "An Error Occured";
+                    document.getElementById("results4").innerHTML = message;
+               }
+            }
+        }
+        
+        function onLogoutPressed()
+        {
+            const url = 'https://www.spotify.com/logout/';
+            const spotifyLogoutWindow = window.open(url, 'Spotify Logout', 'width=700,height=500,top=40,left=40');
+            setTimeout(() => 
+            {
+                spotifyLogoutWindow.close();
+                location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE);
+            }, 1000);
+        }
+        
+    </script>
+  </body>
+</html>

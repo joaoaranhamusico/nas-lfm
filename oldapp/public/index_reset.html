@@ -1,0 +1,2228 @@
+<!doctype html>
+<html>
+  <head>
+    <title>NAS Reset Console</title>
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+    <style type="text/css">
+        #login {
+            display: block;
+        }
+        #loggedin{
+            display: none;
+        }
+        .text-overflow {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            width: 500px;
+        }
+        hr.dashed {
+            border-top: 3px dashed #bbb;
+        }
+    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  </head>
+
+  <body onload="onBodyLoaded()">
+    <div class="container">
+      <div id="login">
+        <h1>NAS Reset Console</h1>
+        <h3 id="welcomeMessage"></h3>
+        <a id="loginButton" href="https://spotifyfollow.a2hosted.com/" onclick="location.href=this.href+ENVIRONMENT+'/'+PAGE+'_login';return false;" class="btn btn-primary">Login</a><br/>
+      </div>
+      <div id="loggedin">
+        <h1>NAS Reset Console</h1>
+        <h3 id="results1"></h3>
+        <input type="text" id="text_box" name="text_box" value=""><br/>
+        <a id="logoutButton" onClick="onLogoutPressed()" class="btn btn-primary">Logout</a>
+        <hr class="dashed">
+        <h3 id="results1">What would you like to do?</h3>
+        
+        <!--<input type="radio" id="export" onclick="radioClicked(this.value)" name="task" value="ExportData">
+        <label for="export">Export</label><br>
+        <input type="radio" id="print" onclick="radioClicked(this.value)" name="task" value="PrintTiersToDiscord">
+        <label for="print">Print Tier to Discord</label><br>-->
+        <input type="radio" id="backupMain" onclick="radioClicked(this.value)" name="task" value="BackupMainPlaylists">
+        <label for="backupMain">Backup Main Playlists</label><br>
+        <input type="radio" id="print" onclick="radioClicked(this.value)" name="task" value="PrintTierUpdateRemaining">
+        <label for="print">Print Tier Update Remaining</label><br>
+        <input type="radio" id="generateSingle" onclick="radioClicked(this.value)" name="task" value="GenerateSinglePlaylist">
+        <label for="generateSingle">Generate Single Staging Playlist</label><br>
+        <input type="radio" id="steps" onclick="radioClicked(this.value)" name="task" value="IndividualSteps">
+        <label for="steps">Individual Reset Steps</label><br>
+        <input type="radio" id="reset" onclick="radioClicked(this.value)" name="task" value="RunReset">
+        <label for="reset">Reset</label><br>
+        <input type="radio" id="revertSteps" onclick="radioClicked(this.value)" name="task" value="IndividualRevertSteps">
+        <label for="revertSteps">Individual Revert Steps</label><br>
+        <input type="radio" id="revert" onclick="radioClicked(this.value)" name="task" value="RevertReset">
+        <label for="revert">Revert Reset To Backup</label><br>
+        
+        <hr class="dashed" id="choiceDash">
+        
+        <h3 id="taskDescription"></h3>
+        <div id="ExportDiv">
+            <input type="radio" id="exportTiers" onclick="exportRadioClicked(this.value)" name="exportRadio" value="ExportTiersBackup" checked>
+            <label for="exportTiers">Export Tiers Backup</label><br>
+            <input type="radio" id="exportSpotifyAccounts" onclick="exportRadioClicked(this.value)" name="exportRadio" value="ExportSpotifyAccounts">
+            <label for="exportSpotifyAccounts">Export Spotify Accounts</label><br>
+            
+            <button id="exportButton" onClick="onExportButtonPressed()" class="btn btn-primary">Export</button>
+        </div>
+        <div id="PrintToDiscordDiv">
+            <input type="radio" id="printCurrent" onclick="printToDiscordRadioClicked(this.value)" name="printRadio" value="PrintCurrentTiers" checked/>
+            <label for="printCurrent">Print Current</label><br>
+            <input type="radio" id="printBackup" onclick="printToDiscordRadioClicked(this.value)" name="printRadio" value="PrintBackupTiers"/>
+            <label for="printBackup">Print Backup</label><br>
+            <input type="text" id="tier_box" name="tier_box" value="0"><br/>
+            
+            <button id="printButton" onClick="onPrintTiersButtonPressed()" class="btn btn-primary">Print</button>
+        </div>
+        <div id="IndividualStepsDiv">
+            <input type="radio" id="spotifyToDiscordBackup" onclick="individualStepsRadioClicked(this.value)" name="stepsRadio" value="BackupSpotifyToDiscord">
+            <label for="spotifyToDiscordBackup">Backup Spotify To Discord</label><br>
+            <input type="radio" id="mainTablesBackup" onclick="individualStepsRadioClicked(this.value)" name="stepsRadio" value="BackupMainTables">
+            <label for="mainTablesBackup">Backup Main Tables</label><br>
+            <input type="radio" id="repopulateMentorsTable" onclick="individualStepsRadioClicked(this.value)" name="stepsRadio" value="RepopulateMentorsTable">
+            <label for="repopulateMentorsTable">Repopulate Mentors Table</label><br>
+            <input type="radio" id="weeklyStatsPrint" onclick="individualStepsRadioClicked(this.value)" name="stepsRadio" value="PrintWeeklyStats">
+            <label for="weeklyStatsPrint">Print Weekly Stats</label><br>
+            <input type="radio" id="rolloverTiers" onclick="individualStepsRadioClicked(this.value)" name="stepsRadio" value="RolloverTiers">
+            <label for="rolloverTiers">Rollover Tiers Table</label><br>
+            <input type="radio" id="updateTiersTable" onclick="individualStepsRadioClicked(this.value)" name="stepsRadio" value="UpdateTiersTable">
+            <label for="updateTiersTable">Update Tiers Table</label><br>
+            <input type="radio" id="resetReportPrint" onclick="individualStepsRadioClicked(this.value)" name="stepsRadio" value="PrintResetReport">
+            <label for="resetReportPrint">Print Reset Report</label><br>
+            <input type="radio" id="updateTiers" onclick="individualStepsRadioClicked(this.value)" name="stepsRadio" value="UpdateTiersOnDiscord">
+            <label for="updateTiers">Update Tiers on Discord</label><br>
+            <input type="radio" id="tableRollovers" onclick="individualStepsRadioClicked(this.value)" name="stepsRadio" value="RolloverTables">
+            <label for="tableRollovers">Rollover Streaming Tables</label><br>
+            
+            <button id="individualStepsButton" onClick="onIndividualStepsButtonPressed()" class="btn btn-primary">Execute</button>
+        </div>
+        <div id="GenerateSinglePlaylistDiv">
+            <input type="radio" id="playlist101" onclick="playlistRadioClicked(this.value)" name="playlistRadio" value="101">
+            <label for="playlist101">101</label><br>
+            <input type="radio" id="playlistNAS" onclick="playlistRadioClicked(this.value)" name="playlistRadio" value="NAS">
+            <label for="playlistNAS">NAS</label><br>
+            <input type="radio" id="playlistPro" onclick="playlistRadioClicked(this.value)" name="playlistRadio" value="Pro">
+            <label for="playlistPro">Pro</label><br>
+            <input type="radio" id="playlistAllstars" onclick="playlistRadioClicked(this.value)" name="playlistRadio" value="Allstars">
+            <label for="playlistAllstars">Allstars</label><br>
+            <input type="radio" id="playlistSuperstars" onclick="playlistRadioClicked(this.value)" name="playlistRadio" value="Superstars">
+            <label for="playlistSuperstars">Superstars</label><br>
+            <input type="radio" id="playlistElite" onclick="playlistRadioClicked(this.value)" name="playlistRadio" value="Elite">
+            <label for="playlistElite">Elite</label><br>
+            <input type="radio" id="playlistLegends" onclick="playlistRadioClicked(this.value)" name="playlistRadio" value="Legends">
+            <label for="playlistLegends">Legends</label><br>
+            
+            <button id="generateSinglePlaylistButton" onClick="onGenerateSinglePlaylistButtonPressed()" class="btn btn-primary">Generate</button>
+        </div>
+        <div id="ResetButtonDiv">
+            <input type="radio" id="firstStepPreReset" onclick="fullResetStepsRadioClicked(this.value)" name="resetRadio" value="FirstStepPreReset" checked>
+            <label for="firstStepPreReset">First Step Pre Reset</label><br>
+            <input type="radio" id="secondStepPreReset" onclick="fullResetStepsRadioClicked(this.value)" name="resetRadio" value="SecondStepUpdateTiers">
+            <label for="secondStepPreReset">Second Step Update Tiers</label><br>
+            <input type="radio" id="thirdStepPreReset" onclick="fullResetStepsRadioClicked(this.value)" name="resetRadio" value="ThirdStepRolloverTables">
+            <label for="thirdStepPreReset">Third Step Rollover Tables</label><br>
+            <input type="radio" id="fourthStepPrintFinalReport" onclick="fullResetStepsRadioClicked(this.value)" name="resetRadio" value="FourthStepPrintFinalReport">
+            <label for="fourthStepPrintFinalReport">Fourth Step Print Final Reset Report</label><br>
+            
+            <button id="resetButton" onClick="onFullResetStepsButtonPressed()" class="btn btn-primary">Reset!</button>
+        </div>
+        <div id="IndividualRevertStepsDiv">
+            <input type="radio" id="revertTiers" onclick="individualRevertStepsRadioClicked(this.value)" name="revertStepsRadio" value="RevertTiers" checked>
+            <label for="revertTiers">Revert Tiers</label><br>
+            <input type="radio" id="revertTables" onclick="individualRevertStepsRadioClicked(this.value)" name="revertStepsRadio" value="RevertMainTables">
+            <label for="revertTables">Revert Main Tables</label><br>
+            
+            <button id="individualRevertStepsButton" onClick="onIndividualRevertStepsButtonPressed()" class="btn btn-primary">Execute</button>
+        </div>
+        <div id="RevertButtonDiv">
+            <button id="revertButton" onClick="onRevertButtonPressed()" class="btn btn-primary">Revert!?!?</button>
+        </div>
+        <div id="PrintTierRemainingDiv">
+            <button id="printTierRemainingButton" onClick="onPrintTierRemainingPressed()" class="btn btn-primary">Print</button>
+        </div>
+        <div id="BackupPlaylistsDiv">
+            <button id="backupPlaylistsButton" onClick="onBackupPlaylistsButtonPressed()" class="btn btn-primary">Backup</button>
+        </div>
+        
+        <hr class="dashed" id="resultsDash">
+        <h3 id="results2"></h3>
+        <h3 id="results3"></h3>
+        <h3 id="results4"></h3>
+        <h3 id="results5"></h3>
+        <h3 id="results6"></h3>
+        <h3 id="results7"></h3>
+        <h3 id="results8"></h3>
+        <h3 id="results9"></h3>
+      </div>
+    </div>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0-alpha.1/handlebars.min.js"></script>
+    <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+
+    <script>
+        
+        function getEnvironmentFromURL()
+        {
+            var prefix = "https://spotifyfollow.a2hosted.com/";
+            var url = window.location.href;
+            var sections = url.split('/');
+            return sections[3];
+        }
+        
+        function getPageFromURL()
+        {
+            var prefix = "https://spotifyfollow.a2hosted.com/";
+            var url = window.location.href;
+            var sections = url.split('/');
+            return sections[4];
+        }
+        
+        var ENVIRONMENT = getEnvironmentFromURL();
+        var PAGE = getPageFromURL();
+        
+        var xmlHttpRequest = new XMLHttpRequest();
+        
+        var access_token = null;
+        var refresh_token = null;
+        var display_name = null;
+        var spotify_id = null;
+        var total_songs_liked = null;
+        var new_songs_liked = null;
+        var total_artists_followed = null;
+        var new_artists_followed = null;
+        var total_playlists_followed = null;
+        var new_playlists_followed = null;
+        var total_episodes_saved = null;
+        var new_episodes_saved = null;
+        var total_shows_saved = null;
+        var new_shows_saved = null;
+        var previous_week = 0;
+        var userTier = -1;
+        var discordIds = null;
+        var currentDiscordIds = [];
+        var discordRoles = null;
+        var currentTask = null;
+        var currentSubTask = null;
+        var isFullReset = false;
+        var selectedPlaylist = "101";
+        
+        var last_access_token_refresh = null;
+        var post_refresh_update_callback = null;
+    
+        function getHashParams()
+        {
+            var hashParams = {};
+            var e, r = /([^&;=]+)=?([^&;]*)/g,
+              q = window.location.hash.substring(1);
+            while ( e = r.exec(q)) {
+             hashParams[e[1]] = decodeURIComponent(e[2]);
+            }
+            return hashParams;
+        }
+        
+        function disableButtons()
+        {
+            document.getElementById("exportButton").disabled = true;
+            document.getElementById("printButton").disabled = true;
+            document.getElementById("individualStepsButton").disabled = true;
+            document.getElementById("resetButton").disabled = true;
+            document.getElementById("individualRevertStepsButton").disabled = true;
+            document.getElementById("revertButton").disabled = true;
+        }
+        
+        function enableButtons()
+        {
+            document.getElementById("exportButton").disabled = false;
+            document.getElementById("printButton").disabled = false;
+            document.getElementById("individualStepsButton").disabled = false;
+            document.getElementById("resetButton").disabled = false;
+            document.getElementById("individualRevertStepsButton").disabled = false;
+            document.getElementById("revertButton").disabled = false;
+        }
+        
+        function isElementChecked(name)
+        {
+            return document.getElementById(name).checked;
+        }
+        
+        function getElementValue(name)
+        {
+            return document.getElementById(name).value;
+        }
+    
+        function onBodyLoaded()
+        {
+            document.getElementById("welcomeMessage").innerHTML = "";
+            
+            var params = getHashParams();
+            
+            if(params.access_token != null && params.refresh_token != null)
+            {
+                last_access_token_refresh = new Date();
+                
+                access_token = params.access_token;
+                refresh_token = params.refresh_token;
+                
+                document.getElementById("welcomeMessage").innerHTML = "";
+                document.getElementById("loginButton").style.visibility = "hidden";
+                
+                xmlHttpRequest = new XMLHttpRequest();
+                
+                xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE + '_user_info?refresh_token=' + refresh_token + '&access_token=' + access_token, true);
+                xmlHttpRequest.onreadystatechange = onUserInfoReceived;
+                xmlHttpRequest.send();
+            }
+            else
+            {
+                document.getElementById("welcomeMessage").innerHTML = "Click the login button to sign in with Spotify, and have access to all the NAS tools";
+        
+                document.getElementById("login").style.display = "block";
+                document.getElementById("loggedin").style.display = "none";
+            }
+        }
+        
+        function onUserInfoReceived()
+        {
+            if (this.readyState == 4 && this.status == 200) {
+               var result = 'Success';
+               var jsonResponse = JSON.parse(xmlHttpRequest.response);
+               if(jsonResponse != null)
+               {
+                   if(jsonResponse.result != null)
+                   {
+                       result = jsonResponse.result;
+                   }
+                   if(jsonResponse.display_name != null)
+                   {
+                       display_name = jsonResponse.display_name;
+                   }
+                   if(jsonResponse.id != null)
+                   {
+                       spotify_id = jsonResponse.id;
+                   }
+               }
+               
+               if(result == 'Success')
+               {
+                    document.getElementById("results1").innerHTML = "Welcome " + display_name;
+                    
+                    document.getElementById("login").style.display = "none";
+                    document.getElementById("loggedin").style.display = "block";
+                    document.getElementById("ExportDiv").style.display = "none";
+                    document.getElementById("PrintToDiscordDiv").style.display = "none";
+                    document.getElementById("GenerateSinglePlaylistDiv").style.display = "none";
+                    document.getElementById("IndividualStepsDiv").style.display = "none";
+                    document.getElementById("ResetButtonDiv").style.display = "none";
+                    document.getElementById("IndividualRevertStepsDiv").style.display = "none";
+                    document.getElementById("RevertButtonDiv").style.display = "none";
+                    document.getElementById("PrintTierRemainingDiv").style.display = "none";
+                    document.getElementById("BackupPlaylistsDiv").style.display = "none";
+                    
+                    document.getElementById("resultsDash").style.visibility = "hidden";
+                    document.getElementById("choiceDash").style.visibility = "hidden";
+               }
+               else
+               {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                    //tokenSafeCall(refreshScreen);
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE);
+               }
+            }
+        }
+        
+        function tokenSafeCall(callback)
+        {
+            if(shouldRefreshAccessToken())
+            {
+                document.getElementById("results2").innerHTML = "Processing...";
+                document.getElementById("results3").innerHTML = "";
+                document.getElementById("results4").innerHTML = "";
+                document.getElementById("results5").innerHTML = "";
+                document.getElementById("results6").innerHTML = "";
+                document.getElementById("results7").innerHTML = "";
+                document.getElementById("results8").innerHTML = "";
+                document.getElementById("results9").innerHTML = "";
+                
+                refreshAccessToken(callback);
+            }
+            else
+            {
+                callback();
+            }
+        }
+        
+        function shouldRefreshAccessToken()
+        {
+            var currentdate = new Date(); 
+                
+            if(last_access_token_refresh != null)
+            {
+                var seconds = (currentdate.getTime() - last_access_token_refresh.getTime()) / 1000;
+                
+                return (seconds > (50 * 60)); // Update refresh token if older than 55 minutes
+            }
+            else
+            {
+                last_access_token_refresh = currentdate;
+                return true;
+            }
+        }
+        
+        function refreshAccessToken(onCompleteCallback)
+        {
+            post_refresh_update_callback = onCompleteCallback;
+            
+            xmlHttpRequest = new XMLHttpRequest();
+           
+            xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/refresh_access_token?refresh_token=' + refresh_token + 
+                '&access_token=' + access_token +
+                '&spotify_name=' + display_name +
+                '&spotify_id=' + spotify_id, true);
+            xmlHttpRequest.onreadystatechange = onRefreshAccessTokenComplete;
+            xmlHttpRequest.send();
+        }
+        
+        function onRefreshAccessTokenComplete()
+        {
+            if (this.readyState == 4 && this.status == 200) {
+                var result = 'Success';
+                var message = '';
+                var jsonResponse = JSON.parse(xmlHttpRequest.response);
+                if(jsonResponse != null)
+                {
+                    if(jsonResponse.result != null)
+                    {
+                       result = jsonResponse.result;
+                    }
+                    if(jsonResponse.message != null)
+                    {
+                       message = jsonResponse.message;
+                    }
+                    if(jsonResponse.access_token != null)
+                    {
+                       access_token = jsonResponse.access_token;
+                    }
+                }
+                
+                if(result == 'Success')
+                {
+                    last_access_token_refresh = new Date(); 
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE + '/#access_token=' + access_token + '&refresh_token=' + refresh_token);
+                    
+                    if(post_refresh_update_callback != null)
+                    {
+                        post_refresh_update_callback();
+                        post_refresh_update_callback = null;
+                    }
+                }
+                else if(message == 'Authentication Error')
+                {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE);
+                }
+                else
+                {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                }
+            }
+        }
+        
+        function radioClicked(task)
+        {
+            currentTask = task;
+            document.getElementById("choiceDash").style.visibility = "visible";
+            document.getElementById("resultsDash").style.visibility = "hidden";
+            document.getElementById("results2").innerHTML = "";
+            document.getElementById("results3").innerHTML = "";
+            document.getElementById("results4").innerHTML = "";
+            document.getElementById("results5").innerHTML = "";
+            document.getElementById("results6").innerHTML = "";
+            document.getElementById("results7").innerHTML = "";
+            document.getElementById("results8").innerHTML = "";
+            document.getElementById("results9").innerHTML = "";
+            
+            if(task == "ExportData")
+            {
+                currentSubTask = "ExportTiersBackup";
+                document.getElementById("spotifyToDiscordBackup").checked = true;
+                document.getElementById("taskDescription").style.color = "black";
+                document.getElementById("taskDescription").innerHTML = "Export Tiers table backup to text file";
+                
+                document.getElementById("ExportDiv").style.display = "block";
+                document.getElementById("PrintToDiscordDiv").style.display = "none";
+                document.getElementById("GenerateSinglePlaylistDiv").style.display = "none";
+                document.getElementById("IndividualStepsDiv").style.display = "none";
+                document.getElementById("ResetButtonDiv").style.display = "none";
+                document.getElementById("IndividualRevertStepsDiv").style.display = "none";
+                document.getElementById("RevertButtonDiv").style.display = "none";
+                document.getElementById("PrintTierRemainingDiv").style.display = "none";
+                document.getElementById("BackupPlaylistsDiv").style.display = "none";
+            }
+            else if(task == "PrintTiersToDiscord")
+            {
+                currentSubTask = "PrintCurrentTiers";
+                document.getElementById("printCurrent").checked = true;
+                document.getElementById("taskDescription").style.color = "black";
+                document.getElementById("taskDescription").innerHTML = "Print Current Tier to discord";
+                
+                document.getElementById("ExportDiv").style.display = "none";
+                document.getElementById("PrintToDiscordDiv").style.display = "block";
+                document.getElementById("GenerateSinglePlaylistDiv").style.display = "none";
+                document.getElementById("IndividualStepsDiv").style.display = "none";
+                document.getElementById("ResetButtonDiv").style.display = "none";
+                document.getElementById("IndividualRevertStepsDiv").style.display = "none";
+                document.getElementById("RevertButtonDiv").style.display = "none";
+                document.getElementById("PrintTierRemainingDiv").style.display = "none";
+                document.getElementById("BackupPlaylistsDiv").style.display = "none";
+            }
+            else if(task == "BackupMainPlaylists")
+            {
+                currentSubTask = "BackupMainPlaylists";
+                document.getElementById("taskDescription").style.color = "black";
+                document.getElementById("taskDescription").innerHTML = "Backup the main playlists";
+                
+                document.getElementById("ExportDiv").style.display = "none";
+                document.getElementById("PrintToDiscordDiv").style.display = "none";
+                document.getElementById("GenerateSinglePlaylistDiv").style.display = "none";
+                document.getElementById("IndividualStepsDiv").style.display = "none";
+                document.getElementById("ResetButtonDiv").style.display = "none";
+                document.getElementById("IndividualRevertStepsDiv").style.display = "none";
+                document.getElementById("RevertButtonDiv").style.display = "none";
+                document.getElementById("PrintTierRemainingDiv").style.display = "none";
+                document.getElementById("BackupPlaylistsDiv").style.display = "block";
+            }
+            else if(task == "PrintTierUpdateRemaining")
+            {
+                currentSubTask = "PrintTierUpdateRemaining";
+                document.getElementById("taskDescription").style.color = "black";
+                document.getElementById("taskDescription").innerHTML = "Print the number of users still awaiting tier updates";
+                
+                document.getElementById("ExportDiv").style.display = "none";
+                document.getElementById("PrintToDiscordDiv").style.display = "none";
+                document.getElementById("GenerateSinglePlaylistDiv").style.display = "none";
+                document.getElementById("IndividualStepsDiv").style.display = "none";
+                document.getElementById("ResetButtonDiv").style.display = "none";
+                document.getElementById("IndividualRevertStepsDiv").style.display = "none";
+                document.getElementById("RevertButtonDiv").style.display = "none";
+                document.getElementById("PrintTierRemainingDiv").style.display = "block";
+                document.getElementById("BackupPlaylistsDiv").style.display = "none";
+            }
+            else if(task == "GenerateSinglePlaylist")
+            {
+                selectedPlaylist = "101";
+                document.getElementById("playlist101").checked = true;
+                document.getElementById("taskDescription").style.color = "black";
+                document.getElementById("taskDescription").innerHTML = "Generate a single staging playlist";
+                
+                document.getElementById("ExportDiv").style.display = "none";
+                document.getElementById("PrintToDiscordDiv").style.display = "none";
+                document.getElementById("GenerateSinglePlaylistDiv").style.display = "block";
+                document.getElementById("IndividualStepsDiv").style.display = "none";
+                document.getElementById("ResetButtonDiv").style.display = "none";
+                document.getElementById("IndividualRevertStepsDiv").style.display = "none";
+                document.getElementById("RevertButtonDiv").style.display = "none";
+                document.getElementById("PrintTierRemainingDiv").style.display = "none";
+                document.getElementById("BackupPlaylistsDiv").style.display = "none";
+            }
+            else if(task == "IndividualSteps")
+            {
+                currentSubTask = "BackupSpotifyToDiscord";
+                document.getElementById("spotifyToDiscordBackup").checked = true;
+                document.getElementById("taskDescription").style.color = "black";
+                
+                document.getElementById("taskDescription").innerHTML = "Backup Discord Tiers";
+                document.getElementById("ExportDiv").style.display = "none";
+                document.getElementById("PrintToDiscordDiv").style.display = "none";
+                document.getElementById("GenerateSinglePlaylistDiv").style.display = "none";
+                document.getElementById("IndividualStepsDiv").style.display = "block";
+                document.getElementById("ResetButtonDiv").style.display = "none";
+                document.getElementById("IndividualRevertStepsDiv").style.display = "none";
+                document.getElementById("RevertButtonDiv").style.display = "none";
+                document.getElementById("PrintTierRemainingDiv").style.display = "none";
+                document.getElementById("BackupPlaylistsDiv").style.display = "none";
+            }
+            else if(task == "RunReset")
+            {
+                currentSubTask = "FirstStepPreReset";
+                document.getElementById("firstStepPreReset").checked = true;
+                document.getElementById("taskDescription").style.color = "black";
+                document.getElementById("taskDescription").innerHTML = "Do all the pre reset steps";
+                
+                document.getElementById("ExportDiv").style.display = "none";
+                document.getElementById("PrintToDiscordDiv").style.display = "none";
+                document.getElementById("GenerateSinglePlaylistDiv").style.display = "none";
+                document.getElementById("IndividualStepsDiv").style.display = "none";
+                document.getElementById("ResetButtonDiv").style.display = "block";
+                document.getElementById("IndividualRevertStepsDiv").style.display = "none";
+                document.getElementById("RevertButtonDiv").style.display = "none";
+                document.getElementById("PrintTierRemainingDiv").style.display = "none";
+                document.getElementById("BackupPlaylistsDiv").style.display = "none";
+            }
+            else if(task == "IndividualRevertSteps")
+            {
+                currentSubTask = "RevertTiers";
+                document.getElementById("revertTiers").checked = true;
+                document.getElementById("taskDescription").style.color = "red";
+                document.getElementById("taskDescription").innerHTML = "Revert Tiers to backup";
+                
+                document.getElementById("ExportDiv").style.display = "none";
+                document.getElementById("PrintToDiscordDiv").style.display = "none";
+                document.getElementById("GenerateSinglePlaylistDiv").style.display = "none";
+                document.getElementById("IndividualStepsDiv").style.display = "none";
+                document.getElementById("ResetButtonDiv").style.display = "none";
+                document.getElementById("IndividualRevertStepsDiv").style.display = "block";
+                document.getElementById("RevertButtonDiv").style.display = "none";
+                document.getElementById("PrintTierRemainingDiv").style.display = "none";
+                document.getElementById("BackupPlaylistsDiv").style.display = "none";
+            }
+            else if(task == "RevertReset")
+            {
+                document.getElementById("taskDescription").style.color = "red";
+                document.getElementById("taskDescription").innerHTML = "Revert the weekly reset! This will revert the weekly reset in case something went wrong.";
+                
+                document.getElementById("ExportDiv").style.display = "none";
+                document.getElementById("PrintToDiscordDiv").style.display = "none";
+                document.getElementById("GenerateSinglePlaylistDiv").style.display = "none";
+                document.getElementById("IndividualStepsDiv").style.display = "none";
+                document.getElementById("ResetButtonDiv").style.display = "none";
+                document.getElementById("IndividualRevertStepsDiv").style.display = "none";
+                document.getElementById("RevertButtonDiv").style.display = "block";
+                document.getElementById("PrintTierRemainingDiv").style.display = "none";
+                document.getElementById("BackupPlaylistsDiv").style.display = "none";
+            }
+        }
+        
+        // ---------------------------------------------------- Export ----------------------------------------------------
+
+        function exportRadioClicked(task)
+        {
+            currentSubTask = task;
+            if(task == "ExportTiersBackup")
+            {
+                document.getElementById("taskDescription").innerHTML = "Export Tiers table backup to text file";
+            }
+            else if(task == "ExportSpotifyAccounts")
+            {
+                document.getElementById("taskDescription").innerHTML = "Export Spotify Accounts table to text file";
+            }
+        }
+        
+        function onExportButtonPressed()
+        {
+            if(currentSubTask == "ExportTiersBackup")
+            {
+                disableButtons();
+                tokenSafeCall(exportTiersBackup);
+            }
+            else if(currentSubTask == "ExportSpotifyAccounts")
+            {
+                disableButtons();
+                tokenSafeCall(exportSpotifyAccounts);
+            }
+        }
+        
+        function exportTiersBackup()
+        {
+            var text_box_value = document.getElementById("text_box").value;
+            xmlHttpRequest = new XMLHttpRequest();
+           
+            xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/print_tiers_backup_table?refresh_token=' + refresh_token + 
+                '&access_token=' + access_token +
+                '&spotify_name=' + display_name +
+                '&spotify_id=' + spotify_id +
+                '&text_box=' + text_box_value, true);
+            xmlHttpRequest.onreadystatechange = onExportTiersComplete;
+            xmlHttpRequest.send();
+            
+            document.getElementById("results2").innerHTML = "Exporting tiers table...";
+            document.getElementById("results3").innerHTML = "";
+            document.getElementById("results4").innerHTML = "";
+            document.getElementById("results5").innerHTML = "";
+            document.getElementById("results6").innerHTML = "";
+            document.getElementById("results7").innerHTML = "";
+            document.getElementById("results8").innerHTML = "";
+            document.getElementById("results9").innerHTML = "";
+        }
+        
+        function onExportTiersComplete()
+        {
+            enableButtons();
+            if (this.readyState == 4 && this.status == 200)
+            {
+               var result = 'Success';
+               var message = '';
+               var jsonResponse = JSON.parse(xmlHttpRequest.response);
+               if(jsonResponse != null)
+               {
+                   if(jsonResponse.result != null)
+                   {
+                       result = jsonResponse.result;
+                   }
+                   if(jsonResponse.message != null)
+                   {
+                       message = jsonResponse.message;
+                   }
+                   if(jsonResponse.data != null)
+                   {
+                       data = jsonResponse.data;
+                   }
+               }
+               
+               if(result == 'Success')
+               {
+                    var element = document.createElement('a');
+                    
+                    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(data));
+                    element.setAttribute('download', "tiersbackup.txt");
+                    
+                    element.style.display = 'none';
+                    document.body.appendChild(element);
+                    
+                    element.click();
+                    
+                    document.body.removeChild(element);
+                    
+                    document.getElementById("results3").innerHTML = "Success";
+               }
+               else if(message == 'Authentication Error')
+               {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE);
+               }
+               else
+               {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+               }
+            }
+        }
+        
+        function exportSpotifyAccounts()
+        {
+            var text_box_value = document.getElementById("text_box").value;
+            xmlHttpRequest = new XMLHttpRequest();
+            
+            xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/print_spotify_to_discord_table?refresh_token=' + refresh_token + 
+                '&access_token=' + access_token +
+                '&spotify_name=' + display_name +
+                '&spotify_id=' + spotify_id +
+                '&text_box=' + text_box_value, true);
+                
+            xmlHttpRequest.onreadystatechange = onExportSpotifyAccountsComplete;
+            xmlHttpRequest.send();
+            
+            document.getElementById("resultsDash").style.visibility = "visible";
+            document.getElementById("results2").innerHTML = "Exporting Spotify To Discord Table...";
+            document.getElementById("results3").innerHTML = "";
+            document.getElementById("results4").innerHTML = "";
+            document.getElementById("results5").innerHTML = "";
+            document.getElementById("results6").innerHTML = "";
+            document.getElementById("results7").innerHTML = "";
+            document.getElementById("results8").innerHTML = "";
+            document.getElementById("results9").innerHTML = "";
+        }
+        
+        function onExportSpotifyAccountsComplete()
+        {
+            enableButtons();
+            if (this.readyState == 4 && this.status == 200)
+            {
+               var result = 'Success';
+               var message = '';
+               var data = null;
+               var jsonResponse = JSON.parse(xmlHttpRequest.response);
+               if(jsonResponse != null)
+               {
+                   if(jsonResponse.result != null)
+                   {
+                       result = jsonResponse.result;
+                   }
+                   if(jsonResponse.message != null)
+                   {
+                       message = jsonResponse.message;
+                   }
+                   if(jsonResponse.data != null)
+                   {
+                       data = jsonResponse.data;
+                   }
+               }
+               
+               if(result == 'Success')
+               {
+                    var element = document.createElement('a');
+                    
+                    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(data));
+                    element.setAttribute('download', "spotifytodiscord.txt");
+                    
+                    element.style.display = 'none';
+                    document.body.appendChild(element);
+                    
+                    element.click();
+                    
+                    document.body.removeChild(element);
+                    
+                    document.getElementById("results3").innerHTML = "Success";
+               }
+               else if(message == 'Authentication Error')
+               {
+                    document.getElementById("results3").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE);
+               }
+               else
+               {
+                    document.getElementById("results3").innerHTML = "An Error Occured";
+               }
+            }
+        }
+        
+        // ---------------------------------------------------- Print To Discord ----------------------------------------------------
+        
+        function printToDiscordRadioClicked(task)
+        {
+            currentSubTask = task;
+            if(task == "PrintCurrentTiers")
+            {
+                document.getElementById("taskDescription").innerHTML = "Print Current Tier To Discord";
+            }
+            else if(task == "PrintBackupTiers")
+            {
+                document.getElementById("taskDescription").innerHTML = "Print Backup Tier To Discord";
+            } 
+        }
+        
+        function onPrintTiersButtonPressed()
+        {
+            disableButtons();
+            tokenSafeCall(printTiersToDiscord);
+        }
+        
+        function printTiersToDiscord()
+        {
+            var tier = document.getElementById("tier_box").value;
+            var previousWeek = 0;
+            
+            if(currentSubTask == "PrintBackupTiers")
+            {
+                previousWeek = 1;
+            }
+            
+            xmlHttpRequest = new XMLHttpRequest();
+            
+            xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/print_tier?refresh_token=' + refresh_token + 
+                '&access_token=' + access_token +
+                '&spotify_name=' + display_name +
+                '&spotify_id=' + spotify_id +
+                '&previous_week=' + previousWeek +
+                '&tier=' + tier, true);
+                
+            xmlHttpRequest.onreadystatechange = onPrintTierToDiscordComplete;
+            xmlHttpRequest.send();
+            
+            document.getElementById("resultsDash").style.visibility = "visible";
+            document.getElementById("results2").innerHTML = "Printing tier...";
+            document.getElementById("results3").innerHTML = "";
+            document.getElementById("results4").innerHTML = "";
+            document.getElementById("results5").innerHTML = "";
+            document.getElementById("results6").innerHTML = "";
+            document.getElementById("results7").innerHTML = "";
+        }
+        
+        function onPrintTierToDiscordComplete()
+        {
+            enableButtons();
+            if (this.readyState == 4 && this.status == 200)
+            {
+                var result = 'Success';
+                var message = '';
+                var data = null;
+                var jsonResponse = JSON.parse(xmlHttpRequest.response);
+                if(jsonResponse != null)
+                {
+                    if(jsonResponse.result != null)
+                    {
+                       result = jsonResponse.result;
+                    }
+                    if(jsonResponse.message != null)
+                    {
+                       message = jsonResponse.message;
+                    }
+                    if(jsonResponse.data != null)
+                    {
+                       data = jsonResponse.data;
+                    }
+                }
+                
+                if(result == 'Success')
+                {
+                    document.getElementById("results3").innerHTML = "Success";
+                }
+                else if(message == 'Authentication Error')
+                {
+                    document.getElementById("results3").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE);
+                }
+                else
+                {
+                    document.getElementById("results3").innerHTML = "An Error Occured";
+                    document.getElementById("results4").innerHTML = message;
+                }
+            }
+        }
+        
+        // ---------------------------------------------------- Individual Reset Steps ----------------------------------------------------
+        
+        function individualStepsRadioClicked(task)
+        {
+            currentSubTask = task;
+            if(task == "BackupSpotifyToDiscord")
+            {
+                document.getElementById("taskDescription").style.color = "black";
+                document.getElementById("taskDescription").innerHTML = "Backup Spotify To Discord";
+            }
+            else if(task == "BackupMainTables")
+            {
+                document.getElementById("taskDescription").style.color = "black";
+                document.getElementById("taskDescription").innerHTML = "Backup Main Database Tables";
+            }
+            else if(task == "RepopulateMentorsTable")
+            {
+                document.getElementById("taskDescription").style.color = "black";
+                document.getElementById("taskDescription").innerHTML = "Repopulate Mentors Table";
+            }
+            else if(task == "PrintWeeklyStats")
+            {
+                document.getElementById("taskDescription").style.color = "black";
+                document.getElementById("taskDescription").innerHTML = "Print Weekly Stats to discord";
+            }
+            else if(task == "RolloverTiers")
+            {
+                document.getElementById("taskDescription").style.color = "black";
+                document.getElementById("taskDescription").innerHTML = "Rollover Tiers Table";
+            }
+            else if(task == "UpdateTiersTable")
+            {
+                document.getElementById("taskDescription").style.color = "black";
+                document.getElementById("taskDescription").innerHTML = "Update Tiers Table";
+            }
+            else if(task == "PrintResetReport")
+            {
+                document.getElementById("taskDescription").style.color = "black";
+                document.getElementById("taskDescription").innerHTML = "Print Reset Report to discord";
+            }
+            else if(task == "RolloverTables")
+            {
+                document.getElementById("taskDescription").style.color = "red";
+                document.getElementById("taskDescription").innerHTML = "Rollover Main Streaming Tables";
+            }
+            else if(task == "UpdateTiersOnDiscord")
+            {
+                document.getElementById("taskDescription").style.color = "red";
+                document.getElementById("taskDescription").innerHTML = "Update Tiers on Discord to new tier levels";
+            }
+        }
+        
+        function playlistRadioClicked(task)
+        {
+            selectedPlaylist = task;
+        }
+        
+        function onIndividualStepsButtonPressed()
+        {
+            isFullReset = false;
+            if(currentSubTask == "BackupSpotifyToDiscord")
+            {
+                disableButtons();
+                tokenSafeCall(backupSpotifyToDiscord);
+            }
+            else if(currentSubTask == "BackupMainTables")
+            {
+                disableButtons();
+                tokenSafeCall(backupMainTables);
+            }
+            else if(currentSubTask == "RepopulateMentorsTable")
+            {
+                disableButtons();
+                tokenSafeCall(repopuateMentorsTable);
+            }
+            else if(currentSubTask == "PrintWeeklyStats")
+            {
+                disableButtons();
+                tokenSafeCall(printWeeklyStats);
+            }
+            else if(currentSubTask == "RolloverTiers")
+            {
+                disableButtons();
+                tokenSafeCall(rolloverTiersTable);
+            }
+            else if(currentSubTask == "UpdateTiersTable")
+            {
+                disableButtons();
+                tokenSafeCall(updateTiersTable);
+            }
+            else if(currentSubTask == "PrintResetReport")
+            {
+                disableButtons();
+                tokenSafeCall(printResetReport);
+            }
+            else if(currentSubTask == "RolloverTables")
+            {
+                disableButtons();
+                if(confirm("You are about to rollover the main tables for the week. Are you sure?"))
+                {
+                    tokenSafeCall(rolloverTables);
+                }
+            }
+            else if(currentSubTask == "UpdateTiersOnDiscord")
+            {
+                disableButtons();
+                if(confirm("You are about to update all the tiers on Discord based on the previous week. Are you sure?"))
+                {
+                    tokenSafeCall(updateTiersOnDiscord);
+                }
+            }
+        }
+        
+        function onGenerateSinglePlaylistButtonPressed()
+        {
+            var text_box_value = document.getElementById("text_box").value;
+            xmlHttpRequest = new XMLHttpRequest();
+            
+            xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/generate_staging_playlist?refresh_token=' + refresh_token + 
+                '&access_token=' + access_token +
+                '&spotify_name=' + display_name +
+                '&spotify_id=' + spotify_id +
+                '&text_box=' + text_box_value +
+                '&playlist=' + selectedPlaylist, true);
+            xmlHttpRequest.onreadystatechange = onGenerateSinglePlaylistComplete;
+            xmlHttpRequest.send();
+            
+            document.getElementById("results3").innerHTML = "Generating " + selectedPlaylist + " Staging Playlist";
+            document.getElementById("results4").innerHTML = "";
+        }
+        
+        function onGenerateSinglePlaylistComplete()
+        {
+            if(!isFullReset)
+            {
+                enableButtons();
+            }
+            
+            if (this.readyState == 4 && this.status == 200)
+            {
+               var result = 'Success';
+               var message = '';
+               var jsonResponse = JSON.parse(xmlHttpRequest.response);
+               if(jsonResponse != null)
+               {
+                   if(jsonResponse.result != null)
+                   {
+                       result = jsonResponse.result;
+                   }
+                   if(jsonResponse.message != null)
+                   {
+                       message = jsonResponse.message;
+                   }
+               }
+               
+               if(result == 'Success')
+               {
+                   document.getElementById("results4").innerHTML = "Success";
+               }
+               else if(message == 'Authentication Error')
+               {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE);
+               }
+               else
+               {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+               }
+            }
+        }
+        
+        // ---------------------------------------------------- Full Reset Steps ----------------------------------------------------
+        
+        function fullResetStepsRadioClicked(task)
+        {
+            currentSubTask = task;
+            if(task == "FirstStepPreReset")
+            {
+                document.getElementById("taskDescription").style.color = "black";
+                document.getElementById("taskDescription").innerHTML = "Do all the pre reset steps";
+            }
+            else if(task == "SecondStepUpdateTiers")
+            {
+                document.getElementById("taskDescription").style.color = "red";
+                document.getElementById("taskDescription").innerHTML = "Update the tiers on Discord";
+            }
+            else if(task == "ThirdStepRolloverTables")
+            {
+                document.getElementById("taskDescription").style.color = "red";
+                document.getElementById("taskDescription").innerHTML = "Rollover the main tables";
+            }
+            else if(task == "FourthStepPrintFinalReport")
+            {
+                document.getElementById("taskDescription").style.color = "black";
+                document.getElementById("taskDescription").innerHTML = "Print final reset report";
+            }
+        }
+        
+        function onFullResetStepsButtonPressed()
+        {
+            isFullReset = true;
+            if(currentSubTask == "FirstStepPreReset")
+            {
+                disableButtons();
+                tokenSafeCall(backupSpotifyToDiscord);
+            }
+            else if(currentSubTask == "SecondStepUpdateTiers")
+            {
+                disableButtons();
+                tokenSafeCall(updateTiersOnDiscord);
+            }
+            else if(currentSubTask == "ThirdStepRolloverTables")
+            {
+                disableButtons();
+                if(confirm("You are about to rollover the main tables for the week. Are you sure?"))
+                {
+                    tokenSafeCall(rolloverTables);
+                }
+            }
+            else if(currentSubTask == "FourthStepPrintFinalReport")
+            {
+                disableButtons();
+                tokenSafeCall(printFinalResetReport);
+            }
+        }
+        
+        function backupSpotifyToDiscord()
+        {
+            var text_box_value = document.getElementById("text_box").value;
+            xmlHttpRequest = new XMLHttpRequest();
+            
+            xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/backup_spotify_to_discord?refresh_token=' + refresh_token + 
+                '&access_token=' + access_token +
+                '&spotify_name=' + display_name +
+                '&spotify_id=' + spotify_id +
+                '&text_box=' + text_box_value, true);
+            xmlHttpRequest.onreadystatechange = onBackupSpotifyToDiscordComplete;
+            xmlHttpRequest.send();
+            
+            if(isFullReset)
+            {
+                document.getElementById("results2").innerHTML = "Backing up Spotify To Discord...";
+                document.getElementById("results3").innerHTML = "";
+                document.getElementById("results4").innerHTML = "";
+                document.getElementById("results5").innerHTML = "";
+                document.getElementById("results6").innerHTML = "";
+                document.getElementById("results7").innerHTML = "";
+                document.getElementById("results8").innerHTML = "";
+                document.getElementById("results9").innerHTML = "";
+            }
+            else
+            {
+                document.getElementById("results2").innerHTML = "Backing up Spotify To Discord...";
+                document.getElementById("results3").innerHTML = "";
+                document.getElementById("results4").innerHTML = "";
+                document.getElementById("results5").innerHTML = "";
+                document.getElementById("results6").innerHTML = "";
+                document.getElementById("results7").innerHTML = "";
+                document.getElementById("results8").innerHTML = "";
+                document.getElementById("results9").innerHTML = "";
+            }
+        }
+        
+        function onBackupSpotifyToDiscordComplete()
+        {
+            if(!isFullReset)
+            {
+                enableButtons();
+            }
+            
+            if (this.readyState == 4 && this.status == 200)
+            {
+               var result = 'Success';
+               var message = '';
+               var jsonResponse = JSON.parse(xmlHttpRequest.response);
+               if(jsonResponse != null)
+               {
+                   if(jsonResponse.result != null)
+                   {
+                       result = jsonResponse.result;
+                   }
+                   if(jsonResponse.message != null)
+                   {
+                       message = jsonResponse.message;
+                   }
+               }
+               
+               if(result == 'Success')
+               {
+                   if(isFullReset)
+                   {
+                       document.getElementById("results2").innerHTML = "Backing up Spotify To Discord (Done)";
+                       tokenSafeCall(backupMainTables);
+                   }
+                   else
+                   {
+                       document.getElementById("results3").innerHTML = "Success";
+                   }
+               }
+               else if(message == 'Authentication Error')
+               {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE);
+               }
+               else
+               {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+               }
+            }
+        }
+        
+        function backupMainTables()
+        {
+            var text_box_value = document.getElementById("text_box").value;
+            xmlHttpRequest = new XMLHttpRequest();
+           
+            xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/backup_main_tables?refresh_token=' + refresh_token + 
+                '&access_token=' + access_token +
+                '&spotify_name=' + display_name +
+                '&spotify_id=' + spotify_id +
+                '&text_box=' + text_box_value, true);
+            xmlHttpRequest.onreadystatechange = onBackupMainTablesComplete;
+            xmlHttpRequest.send();
+            
+            if(isFullReset)
+            {
+                document.getElementById("results3").innerHTML = "Backing Up Streaming tables...";
+                document.getElementById("results4").innerHTML = "";
+                document.getElementById("results5").innerHTML = "";
+                document.getElementById("results6").innerHTML = "";
+                document.getElementById("results7").innerHTML = "";
+                document.getElementById("results8").innerHTML = "";
+                document.getElementById("results9").innerHTML = "";
+            }
+            else
+            {
+                document.getElementById("results2").innerHTML = "Backing Up Streaming tables...";
+                document.getElementById("results3").innerHTML = "";
+                document.getElementById("results4").innerHTML = "";
+                document.getElementById("results5").innerHTML = "";
+                document.getElementById("results6").innerHTML = "";
+                document.getElementById("results7").innerHTML = "";
+                document.getElementById("results8").innerHTML = "";
+                document.getElementById("results9").innerHTML = "";
+            }
+        }
+        
+        function onBackupMainTablesComplete()
+        {
+            if(!isFullReset)
+            {
+                enableButtons();
+            }
+            
+            if (this.readyState == 4 && this.status == 200)
+            {
+                var result = 'Success';
+                var message = '';
+                var jsonResponse = JSON.parse(xmlHttpRequest.response);
+                if(jsonResponse != null)
+                {
+                    if(jsonResponse.result != null)
+                    {
+                       result = jsonResponse.result;
+                    }
+                    if(jsonResponse.message != null)
+                    {
+                       message = jsonResponse.message;
+                    }
+                }
+                
+                if(result == 'Success')
+                {
+                    if(isFullReset)
+                    {
+                       document.getElementById("results3").innerHTML = "Backing Up Streaming tables (Done)";
+                       tokenSafeCall(repopuateMentorsTable);
+                    }
+                    else
+                    {
+                       document.getElementById("results3").innerHTML = "Success";
+                    }
+                }
+                else if(message == 'Authentication Error')
+                {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE);
+                }
+                else
+                {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                }
+            }
+        }
+        
+        function repopuateMentorsTable()
+        {
+            var text_box_value = document.getElementById("text_box").value;
+            xmlHttpRequest = new XMLHttpRequest();
+           
+            xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/repopulate_mentors_table?refresh_token=' + refresh_token + 
+                '&access_token=' + access_token +
+                '&spotify_name=' + display_name +
+                '&spotify_id=' + spotify_id +
+                '&text_box=' + text_box_value, true);
+            xmlHttpRequest.onreadystatechange = onRepopulateMentorsTableComplete;
+            xmlHttpRequest.send();
+            
+            if(isFullReset)
+            {
+                document.getElementById("results4").innerHTML = "Repopulating Mentors Table...";
+                document.getElementById("results5").innerHTML = "";
+                document.getElementById("results6").innerHTML = "";
+                document.getElementById("results7").innerHTML = "";
+                document.getElementById("results8").innerHTML = "";
+                document.getElementById("results9").innerHTML = "";
+            }
+            else
+            {
+                document.getElementById("results2").innerHTML = "Repopulating Mentors Table...";
+                document.getElementById("results3").innerHTML = "";
+                document.getElementById("results4").innerHTML = "";
+                document.getElementById("results5").innerHTML = "";
+                document.getElementById("results6").innerHTML = "";
+                document.getElementById("results7").innerHTML = "";
+                document.getElementById("results8").innerHTML = "";
+                document.getElementById("results9").innerHTML = "";
+            }
+        }
+        
+        function onRepopulateMentorsTableComplete()
+        {
+            if(!isFullReset)
+            {
+                enableButtons();
+            }
+            
+            if (this.readyState == 4 && this.status == 200)
+            {
+                var result = 'Success';
+                var message = '';
+                var jsonResponse = JSON.parse(xmlHttpRequest.response);
+                if(jsonResponse != null)
+                {
+                    if(jsonResponse.result != null)
+                    {
+                       result = jsonResponse.result;
+                    }
+                    if(jsonResponse.message != null)
+                    {
+                       message = jsonResponse.message;
+                    }
+                }
+                
+                if(result == 'Success')
+                {
+                    if(isFullReset)
+                    {
+                       document.getElementById("results4").innerHTML = "Repopulating Mentors Table (Done)";
+                       tokenSafeCall(printWeeklyStats);
+                    }
+                    else
+                    {
+                       document.getElementById("results3").innerHTML = "Success";
+                    }
+                }
+                else if(message == 'Authentication Error')
+                {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE);
+                }
+                else
+                {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                }
+            }
+        }
+        
+        function printWeeklyStats()
+        {
+            var text_box_value = document.getElementById("text_box").value;
+            xmlHttpRequest = new XMLHttpRequest();
+           
+            xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/print_weekly_stats?refresh_token=' + refresh_token + 
+                '&access_token=' + access_token +
+                '&spotify_name=' + display_name +
+                '&spotify_id=' + spotify_id +
+                '&previous_week=' + 0 +
+                '&text_box=' + text_box_value, true);
+            xmlHttpRequest.onreadystatechange = onPrintWeeklyStatsComplete;
+            xmlHttpRequest.send();
+            
+            if(isFullReset)
+            {
+                document.getElementById("results5").innerHTML = "Printing Weekly Stats To Discord...";
+                document.getElementById("results6").innerHTML = "";
+                document.getElementById("results7").innerHTML = "";
+                document.getElementById("results8").innerHTML = "";
+                document.getElementById("results9").innerHTML = "";
+            }
+            else
+            {
+                document.getElementById("results2").innerHTML = "Printing Weekly Stats To Discord...";
+                document.getElementById("results3").innerHTML = "";
+                document.getElementById("results4").innerHTML = "";
+                document.getElementById("results5").innerHTML = "";
+                document.getElementById("results6").innerHTML = "";
+                document.getElementById("results7").innerHTML = "";
+                document.getElementById("results8").innerHTML = "";
+                document.getElementById("results9").innerHTML = "";
+            }
+        }
+        
+        function onPrintWeeklyStatsComplete()
+        {
+            if(!isFullReset)
+            {
+                enableButtons();
+            }
+            
+            if (this.readyState == 4 && this.status == 200)
+            {
+               var result = 'Success';
+               var message = '';
+               var jsonResponse = JSON.parse(xmlHttpRequest.response);
+               if(jsonResponse != null)
+               {
+                   if(jsonResponse.result != null)
+                   {
+                       result = jsonResponse.result;
+                   }
+                   if(jsonResponse.message != null)
+                   {
+                       message = jsonResponse.message;
+                   }
+               }
+               
+               if(result == 'Success')
+               {
+                   if(isFullReset)
+                   {
+                        document.getElementById("results5").innerHTML = "Printing Weekly Stats To Discord (Done)";
+                        tokenSafeCall(rolloverTiersTable);
+                   }
+                   else
+                   {
+                       document.getElementById("results3").innerHTML = "Success";
+                   }
+               }
+               else if(message == 'Authentication Error')
+               {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE);
+               }
+               else
+               {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+               }
+            }
+        }
+        
+        function rolloverTiersTable()
+        {
+            var text_box_value = document.getElementById("text_box").value;
+            xmlHttpRequest = new XMLHttpRequest();
+           
+            xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/rollover_tiers_table?refresh_token=' + refresh_token + 
+                '&access_token=' + access_token +
+                '&spotify_name=' + display_name +
+                '&spotify_id=' + spotify_id +
+                '&previous_week=' + 0 +
+                '&text_box=' + text_box_value, true);
+            xmlHttpRequest.onreadystatechange = onRolloverTiersTableComplete;
+            xmlHttpRequest.send();
+            
+            if(isFullReset)
+            {
+                document.getElementById("results6").innerHTML = "Rollover Tiers Table...";
+                document.getElementById("results7").innerHTML = "";
+                document.getElementById("results8").innerHTML = "";
+                document.getElementById("results9").innerHTML = "";
+            }
+            else
+            {
+                document.getElementById("results2").innerHTML = "Rollover Tiers Table...";
+                document.getElementById("results3").innerHTML = "";
+                document.getElementById("results4").innerHTML = "";
+                document.getElementById("results5").innerHTML = "";
+                document.getElementById("results6").innerHTML = "";
+                document.getElementById("results7").innerHTML = "";
+                document.getElementById("results8").innerHTML = "";
+                document.getElementById("results9").innerHTML = "";
+            }
+        }
+        
+        function onRolloverTiersTableComplete()
+        {
+            if(!isFullReset)
+            {
+                enableButtons();
+            }
+            
+            if (this.readyState == 4 && this.status == 200)
+            {
+               var result = 'Success';
+               var message = '';
+               var jsonResponse = JSON.parse(xmlHttpRequest.response);
+               if(jsonResponse != null)
+               {
+                   if(jsonResponse.result != null)
+                   {
+                       result = jsonResponse.result;
+                   }
+                   if(jsonResponse.message != null)
+                   {
+                       message = jsonResponse.message;
+                   }
+               }
+               
+               if(result == 'Success')
+               {
+                   if(isFullReset)
+                   {
+                        document.getElementById("results6").innerHTML = "Rollover Tiers Table (Done)";
+                        tokenSafeCall(updateTiersTable);
+                   }
+                   else
+                   {
+                       document.getElementById("results3").innerHTML = "Success";
+                   }
+               }
+               else if(message == 'Authentication Error')
+               {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE);
+               }
+               else
+               {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+               }
+            }
+        }
+        
+        function updateTiersTable()
+        {
+            var text_box_value = document.getElementById("text_box").value;
+            xmlHttpRequest = new XMLHttpRequest();
+           
+            xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/update_tiers_table?refresh_token=' + refresh_token + 
+                '&access_token=' + access_token +
+                '&spotify_name=' + display_name +
+                '&spotify_id=' + spotify_id +
+                '&previous_week=' + 0 +
+                '&text_box=' + text_box_value, true);
+            xmlHttpRequest.onreadystatechange = onUpdateTiersTableComplete;
+            xmlHttpRequest.send();
+            
+            if(isFullReset)
+            {
+                document.getElementById("results7").innerHTML = "Update Tiers Table...";
+                document.getElementById("results8").innerHTML = "";
+                document.getElementById("results9").innerHTML = "";
+            }
+            else
+            {
+                document.getElementById("results2").innerHTML = "Update Tiers Table...";
+                document.getElementById("results3").innerHTML = "";
+                document.getElementById("results4").innerHTML = "";
+                document.getElementById("results5").innerHTML = "";
+                document.getElementById("results6").innerHTML = "";
+                document.getElementById("results7").innerHTML = "";
+                document.getElementById("results8").innerHTML = "";
+                document.getElementById("results9").innerHTML = "";
+            }
+        }
+        
+        function onUpdateTiersTableComplete()
+        {
+            if(!isFullReset)
+            {
+                enableButtons();
+            }
+            
+            if (this.readyState == 4 && this.status == 200)
+            {
+               var result = 'Success';
+               var message = '';
+               var jsonResponse = JSON.parse(xmlHttpRequest.response);
+               if(jsonResponse != null)
+               {
+                   if(jsonResponse.result != null)
+                   {
+                       result = jsonResponse.result;
+                   }
+                   if(jsonResponse.message != null)
+                   {
+                       message = jsonResponse.message;
+                   }
+               }
+               
+               if(result == 'Success')
+               {
+                   if(isFullReset)
+                   {
+                        document.getElementById("results7").innerHTML = "Update Tiers Table (Done)";
+                        tokenSafeCall(printResetReport);
+                   }
+                   else
+                   {
+                       document.getElementById("results3").innerHTML = "Success";
+                   }
+               }
+               else if(message == 'Authentication Error')
+               {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE);
+               }
+               else
+               {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+               }
+            }
+        }
+        
+        function printResetReport()
+        {
+            var text_box_value = document.getElementById("text_box").value;
+            xmlHttpRequest = new XMLHttpRequest();
+           
+            xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/print_reset_report?refresh_token=' + refresh_token + 
+                '&access_token=' + access_token +
+                '&spotify_name=' + display_name +
+                '&spotify_id=' + spotify_id +
+                '&text_box=' + text_box_value, true);
+            xmlHttpRequest.onreadystatechange = onPrintResetReportComplete;
+            xmlHttpRequest.send();
+            
+            if(isFullReset)
+            {
+                document.getElementById("results8").innerHTML = "Printing Reset Report To Discord...";
+                document.getElementById("results9").innerHTML = "";
+            }
+            else
+            {
+                document.getElementById("results2").innerHTML = "Printing Reset Report To Discord...";
+                document.getElementById("results3").innerHTML = "";
+                document.getElementById("results4").innerHTML = "";
+                document.getElementById("results5").innerHTML = "";
+                document.getElementById("results6").innerHTML = "";
+                document.getElementById("results7").innerHTML = "";
+                document.getElementById("results8").innerHTML = "";
+                document.getElementById("results9").innerHTML = "";
+            }
+        }
+        
+        function onPrintResetReportComplete()
+        {
+            enableButtons();
+            
+            if (this.readyState == 4 && this.status == 200)
+            {
+               var result = 'Success';
+               var message = '';
+               var jsonResponse = JSON.parse(xmlHttpRequest.response);
+               if(jsonResponse != null)
+               {
+                   if(jsonResponse.result != null)
+                   {
+                       result = jsonResponse.result;
+                   }
+                   if(jsonResponse.message != null)
+                   {
+                       message = jsonResponse.message;
+                   }
+               }
+               
+               if(result == 'Success')
+               {
+                   if(isFullReset)
+                   {
+                        document.getElementById("results8").innerHTML = "Printing Reset Report To Discord (Done)";
+                        document.getElementById("results9").innerHTML = "*** Verify that the reset report has been fully printed to Discord before continuing to the next step ***";
+                   }
+                   else
+                   {
+                       document.getElementById("results3").innerHTML = "Success";
+                   }
+               }
+               else if(message == 'Authentication Error')
+               {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE);
+               }
+               else
+               {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+               }
+            }
+        }
+        
+        function updateTiersOnDiscord()
+        {
+            var text_box_value = document.getElementById("text_box").value;
+            xmlHttpRequest = new XMLHttpRequest();
+           
+            xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/update_tiers?refresh_token=' + refresh_token + 
+                '&access_token=' + access_token +
+                '&spotify_name=' + display_name +
+                '&spotify_id=' + spotify_id +
+                '&text_box=' + text_box_value, true);
+            xmlHttpRequest.onreadystatechange = onUpdateTiersComplete;
+            xmlHttpRequest.send();
+            
+            document.getElementById("results2").innerHTML = "Updating Tiers (This may take 10 - 15 minutes)";
+            document.getElementById("results3").innerHTML = "*** Verify that all user tiers have been updated on Discord before continuing to the next step ***";
+            document.getElementById("results4").innerHTML = "";
+            document.getElementById("results5").innerHTML = "";
+            document.getElementById("results6").innerHTML = "";
+            document.getElementById("results7").innerHTML = "";
+            document.getElementById("results8").innerHTML = "";
+            document.getElementById("results9").innerHTML = "";
+        }
+        
+        function onUpdateTiersComplete()
+        {
+            enableButtons();
+            
+            if (this.readyState == 4 && this.status == 200)
+            {
+               var result = 'Success';
+               var message = '';
+               var jsonResponse = JSON.parse(xmlHttpRequest.response);
+               var count = -1;
+               if(jsonResponse != null)
+               {
+                   if(jsonResponse.result != null)
+                   {
+                       result = jsonResponse.result;
+                   }
+                   if(jsonResponse.message != null)
+                   {
+                       message = jsonResponse.message;
+                   }
+                   if(jsonResponse.count != null)
+                   {
+                       count = jsonResponse.count;
+                   }
+               }
+               
+               if(result == 'Success')
+               {
+                   if(isFullReset)
+                   {
+                       document.getElementById("results3").innerHTML = "Success " + count + " users updated";
+                       document.getElementById("results4").innerHTML = "*** Verify that all user tiers have been updated on Discord before continuing to the next step ***";
+                   }
+                   else
+                   {
+                       document.getElementById("results3").innerHTML = "Success " + count + " users updated";
+                   }
+               }
+               else if(message == 'Authentication Error')
+               {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE);
+               }
+               else
+               {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+               }
+            }
+        }
+        
+        function rolloverTables()
+        {
+            var text_box_value = document.getElementById("text_box").value;
+            xmlHttpRequest = new XMLHttpRequest();
+           
+            xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/rollover_main_tables?refresh_token=' + refresh_token + 
+                '&access_token=' + access_token +
+                '&spotify_name=' + display_name +
+                '&spotify_id=' + spotify_id +
+                '&text_box=' + text_box_value, true);
+            xmlHttpRequest.onreadystatechange = onRolloverTablesComplete;
+            xmlHttpRequest.send();
+            
+            document.getElementById("results2").innerHTML = "Rollover Streaming tables...";
+            document.getElementById("results3").innerHTML = "";
+            document.getElementById("results4").innerHTML = "";
+            document.getElementById("results5").innerHTML = "";
+            document.getElementById("results6").innerHTML = "";
+            document.getElementById("results7").innerHTML = "";
+            document.getElementById("results8").innerHTML = "";
+            document.getElementById("results9").innerHTML = "";
+        }
+        
+        function onRolloverTablesComplete()
+        {
+            enableButtons();
+            
+            if (this.readyState == 4 && this.status == 200)
+            {
+               var result = 'Success';
+               var message = '';
+               var jsonResponse = JSON.parse(xmlHttpRequest.response);
+               if(jsonResponse != null)
+               {
+                   if(jsonResponse.result != null)
+                   {
+                       result = jsonResponse.result;
+                   }
+                   if(jsonResponse.message != null)
+                   {
+                       message = jsonResponse.message;
+                   }
+               }
+               
+               if(result == 'Success')
+               {
+                   document.getElementById("results3").innerHTML = "Success";
+               }
+               else if(message == 'Authentication Error')
+               {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE);
+               }
+               else
+               {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+               }
+            }
+        }
+        
+        function printFinalResetReport()
+        {
+            var text_box_value = document.getElementById("text_box").value;
+            xmlHttpRequest = new XMLHttpRequest();
+           
+            xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/print_final_report?refresh_token=' + refresh_token + 
+                '&access_token=' + access_token +
+                '&spotify_name=' + display_name +
+                '&spotify_id=' + spotify_id +
+                '&text_box=' + text_box_value, true);
+            xmlHttpRequest.onreadystatechange = onFinalResetReportComplete;
+            xmlHttpRequest.send();
+            
+            document.getElementById("results2").innerHTML = "Printing Final Reset Report";
+            document.getElementById("results3").innerHTML = "";
+            document.getElementById("results4").innerHTML = "";
+            document.getElementById("results5").innerHTML = "";
+            document.getElementById("results6").innerHTML = "";
+            document.getElementById("results7").innerHTML = "";
+            document.getElementById("results8").innerHTML = "";
+            document.getElementById("results9").innerHTML = "";
+        }
+        
+        function onFinalResetReportComplete()
+        {
+            enableButtons();
+            
+            if (this.readyState == 4 && this.status == 200)
+            {
+               var result = 'Success';
+               var message = '';
+               var jsonResponse = JSON.parse(xmlHttpRequest.response);
+               if(jsonResponse != null)
+               {
+                   if(jsonResponse.result != null)
+                   {
+                       result = jsonResponse.result;
+                   }
+                   if(jsonResponse.message != null)
+                   {
+                       message = jsonResponse.message;
+                   }
+               }
+               
+               if(result == 'Success')
+               {
+                   document.getElementById("results3").innerHTML = "Success";
+               }
+               else if(message == 'Authentication Error')
+               {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE);
+               }
+               else
+               {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+               }
+            }
+        }
+        
+        // ---------------------------------------------------- Individual Revert Steps ----------------------------------------------------
+        
+        function individualRevertStepsRadioClicked(task)
+        {
+            currentSubTask = task;
+            if(task == "RevertTiers")
+            {
+                document.getElementById("taskDescription").style.color = "red";
+                document.getElementById("taskDescription").innerHTML = "Revert tiers to backup on Discord";
+            }
+            else if(task == "RevertMainTables")
+            {
+                document.getElementById("taskDescription").style.color = "red";
+                document.getElementById("taskDescription").innerHTML = "Revert main streaming tables to backups";
+            }
+        }
+        
+        function onIndividualRevertStepsButtonPressed()
+        {
+            isFullReset = false;
+            if(currentSubTask == "RevertTiers")
+            {
+                disableButtons();
+                tokenSafeCall(revertTiers);
+            }
+            else if(currentSubTask == "RevertMainTables")
+            {
+                disableButtons();
+                tokenSafeCall(revertMainTables);
+            }
+        }
+        
+        function revertTiers()
+        {
+            var text_box_value = document.getElementById("text_box").value;
+            xmlHttpRequest = new XMLHttpRequest();
+           
+            xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/revert_tiers?refresh_token=' + refresh_token + 
+                '&access_token=' + access_token +
+                '&spotify_name=' + display_name +
+                '&spotify_id=' + spotify_id +
+                '&text_box=' + text_box_value, true);
+            xmlHttpRequest.onreadystatechange = onRevertTiersComplete;
+            xmlHttpRequest.send();
+            
+            if(isFullReset)
+            {
+                document.getElementById("results2").innerHTML = "Reverting tiers on discord...";
+                document.getElementById("results3").innerHTML = "";
+                document.getElementById("results4").innerHTML = "";
+                document.getElementById("results5").innerHTML = "";
+                document.getElementById("results6").innerHTML = "";
+                document.getElementById("results7").innerHTML = "";
+                document.getElementById("results8").innerHTML = "";
+                document.getElementById("results9").innerHTML = "";
+            }
+            else
+            {
+                document.getElementById("results2").innerHTML = "Reverting tiers on discord...";
+                document.getElementById("results3").innerHTML = "";
+                document.getElementById("results4").innerHTML = "";
+                document.getElementById("results5").innerHTML = "";
+                document.getElementById("results6").innerHTML = "";
+                document.getElementById("results7").innerHTML = "";
+                document.getElementById("results8").innerHTML = "";
+                document.getElementById("results9").innerHTML = "";
+            }
+        }
+        
+        function onRevertTiersComplete()
+        {
+            if(!isFullReset)
+            {
+                enableButtons();
+            }
+            
+            if (this.readyState == 4 && this.status == 200)
+            {
+               var result = 'Success';
+               var message = '';
+               var jsonResponse = JSON.parse(xmlHttpRequest.response);
+               if(jsonResponse != null)
+               {
+                   if(jsonResponse.result != null)
+                   {
+                       result = jsonResponse.result;
+                   }
+                   if(jsonResponse.message != null)
+                   {
+                       message = jsonResponse.message;
+                   }
+               }
+               
+               if(result == 'Success')
+               {
+                   if(isFullReset)
+                   {
+                        document.getElementById("results2").innerHTML = "Reverting tiers on discord (Done)";
+                        document.getElementById("results3").innerHTML = "";
+                        document.getElementById("results4").innerHTML = "";
+                        document.getElementById("results5").innerHTML = "";
+                        document.getElementById("results6").innerHTML = "";
+                        document.getElementById("results7").innerHTML = "";
+                        document.getElementById("results8").innerHTML = "";
+                        document.getElementById("results9").innerHTML = "";
+                        
+                        tokenSafeCall(revertMainTables);
+                   }
+                   else
+                   {
+                       document.getElementById("results3").innerHTML = "Success";
+                   }
+               }
+               else if(message == 'Authentication Error')
+               {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE);
+               }
+               else
+               {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+               }
+            }
+        }
+        
+        function revertMainTables()
+        {
+            var text_box_value = document.getElementById("text_box").value;
+            xmlHttpRequest = new XMLHttpRequest();
+           
+            xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/revert_main_tables_to_backup?refresh_token=' + refresh_token + 
+                '&access_token=' + access_token +
+                '&spotify_name=' + display_name +
+                '&spotify_id=' + spotify_id +
+                '&text_box=' + text_box_value, true);
+            xmlHttpRequest.onreadystatechange = onRevertMainTablesComplete;
+            xmlHttpRequest.send();
+            
+            if(isFullReset)
+            {
+                document.getElementById("results3").innerHTML = "Reverting to backup tables...";
+                document.getElementById("results4").innerHTML = "";
+                document.getElementById("results5").innerHTML = "";
+                document.getElementById("results6").innerHTML = "";
+                document.getElementById("results7").innerHTML = "";
+                document.getElementById("results8").innerHTML = "";
+                document.getElementById("results9").innerHTML = "";
+            }
+            else
+            {
+                document.getElementById("results2").innerHTML = "Reverting to backup tables...";
+                document.getElementById("results3").innerHTML = "";
+                document.getElementById("results4").innerHTML = "";
+                document.getElementById("results5").innerHTML = "";
+                document.getElementById("results6").innerHTML = "";
+                document.getElementById("results7").innerHTML = "";
+                document.getElementById("results8").innerHTML = "";
+                document.getElementById("results9").innerHTML = "";
+            }
+        }
+        
+        function onRevertMainTablesComplete()
+        {
+            enableButtons();
+            
+            if (this.readyState == 4 && this.status == 200)
+            {
+               var result = 'Success';
+               var message = '';
+               var jsonResponse = JSON.parse(xmlHttpRequest.response);
+               if(jsonResponse != null)
+               {
+                   if(jsonResponse.result != null)
+                   {
+                       result = jsonResponse.result;
+                   }
+                   if(jsonResponse.message != null)
+                   {
+                       message = jsonResponse.message;
+                   }
+               }
+               
+               if(result == 'Success')
+               {
+                   if(isFullReset)
+                   {
+                       document.getElementById("results3").innerHTML = "Reverting to backup tables (Done)";
+                       document.getElementById("results4").innerHTML =  "*** Full Revert Complete ***";
+                   }
+                   else
+                   {
+                       document.getElementById("results3").innerHTML = "Success";
+                   }
+               }
+               else if(message == 'Authentication Error')
+               {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE);
+               }
+               else
+               {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+               }
+            }
+        }
+        
+        // ---------------------------------------------------- Revert Reset To Backup ----------------------------------------------------
+        
+        function onRevertButtonPressed()
+        {
+            if(confirm("You are about to revert the NAS reset back to it's most recent backup. Are you sure?"))
+            {
+                disableButtons();
+                tokenSafeCall(revertReset);
+            }
+        }
+        
+        function revertReset()
+        {
+            isFullReset = true;
+            tokenSafeCall(revertTiers);
+        }
+        
+        function onPrintTierRemainingPressed()
+        {
+            var text_box_value = document.getElementById("text_box").value;
+            xmlHttpRequest = new XMLHttpRequest();
+           
+            xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/print_tier_update_list?refresh_token=' + refresh_token + 
+                '&access_token=' + access_token +
+                '&spotify_name=' + display_name +
+                '&spotify_id=' + spotify_id +
+                '&text_box=' + text_box_value, true);
+            xmlHttpRequest.onreadystatechange = onPrintTierRemainingComplete;
+            xmlHttpRequest.send();
+            
+            document.getElementById("results3").innerHTML = "Users awaiting tier update...";
+            document.getElementById("results4").innerHTML = "";
+            document.getElementById("results5").innerHTML = "";
+            document.getElementById("results6").innerHTML = "";
+            document.getElementById("results7").innerHTML = "";
+            document.getElementById("results8").innerHTML = "";
+            document.getElementById("results9").innerHTML = "";
+        }
+        
+        function onPrintTierRemainingComplete()
+        {
+            enableButtons();
+            
+            if (this.readyState == 4 && this.status == 200)
+            {
+               var result = 'Success';
+               var message = '';
+               var jsonResponse = JSON.parse(xmlHttpRequest.response);
+               var count = -1;
+               if(jsonResponse != null)
+               {
+                   if(jsonResponse.result != null)
+                   {
+                       result = jsonResponse.result;
+                   }
+                   if(jsonResponse.message != null)
+                   {
+                       message = jsonResponse.message;
+                   }
+                   if(jsonResponse.count != null)
+                   {
+                       count = jsonResponse.count;
+                   }
+               }
+               
+               if(result == 'Success')
+               {
+                   document.getElementById("results3").innerHTML = "Users awaiting tier update:" + count;
+               }
+               else if(message == 'Authentication Error')
+               {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE);
+               }
+               else
+               {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+               }
+            }
+        }
+        
+        function onBackupPlaylistsButtonPressed()
+        {
+            var text_box_value = document.getElementById("text_box").value;
+            xmlHttpRequest = new XMLHttpRequest();
+           
+            xmlHttpRequest.open("GET", 'https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/backup_main_playlists?refresh_token=' + refresh_token + 
+                '&access_token=' + access_token +
+                '&spotify_name=' + display_name +
+                '&spotify_id=' + spotify_id +
+                '&text_box=' + text_box_value, true);
+            xmlHttpRequest.onreadystatechange = onBackupPlaylistsComplete;
+            xmlHttpRequest.send();
+            
+            document.getElementById("results3").innerHTML = "Backing up main playlists...";
+            document.getElementById("results4").innerHTML = "";
+            document.getElementById("results5").innerHTML = "";
+            document.getElementById("results6").innerHTML = "";
+            document.getElementById("results7").innerHTML = "";
+            document.getElementById("results8").innerHTML = "";
+            document.getElementById("results9").innerHTML = "";
+        }
+        
+        function onBackupPlaylistsComplete()
+        {
+            enableButtons();
+            
+            if (this.readyState == 4 && this.status == 200)
+            {
+               var result = 'Success';
+               var message = '';
+               var jsonResponse = JSON.parse(xmlHttpRequest.response);
+               if(jsonResponse != null)
+               {
+                   if(jsonResponse.result != null)
+                   {
+                       result = jsonResponse.result;
+                   }
+                   if(jsonResponse.message != null)
+                   {
+                       message = jsonResponse.message;
+                   }
+               }
+               
+               if(result == 'Success')
+               {
+                   document.getElementById("results4").innerHTML = "Success";
+               }
+               else if(message == 'Authentication Error')
+               {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+                    location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE);
+               }
+               else
+               {
+                    document.getElementById("results1").innerHTML = "An Error Occured";
+               }
+            }
+        }
+        
+        // ---------------------------------------------------- Logout ----------------------------------------------------
+        
+        function onLogoutPressed()
+        {
+            const url = 'https://www.spotify.com/logout/';
+            const spotifyLogoutWindow = window.open(url, 'Spotify Logout', 'width=700,height=500,top=40,left=40');
+            setTimeout(() => 
+            {
+                spotifyLogoutWindow.close();
+                location.replace('https://spotifyfollow.a2hosted.com/' + ENVIRONMENT + '/' + PAGE);
+            }, 1000);
+        }
+        
+    </script>
+  </body>
+</html>

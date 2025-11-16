@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NAS Bonus Tracker — Quick Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #f7f6f2;
+    --panel: #ffffff;
+    --ink: #182026;
+    --muted: #5f6b7a;
+    --accent: #2ecc71;
+    --accent-ink: #0e6f3b;
+    --border: #e7e5df;
+    --chip: #eaf7ef;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:radial-gradient(1200px 600px at 75% -10%, #f2fff7 0%, var(--bg) 50%) no-repeat, var(--bg);color:var(--ink);font-family:"Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;line-height:1.45}
+  header{display:flex;align-items:center;gap:16px;padding:28px 20px 0 20px;max-width:980px;margin:0 auto}
+  header .logo{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#333,#777);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700}
+  h1{font-size:clamp(22px,4vw,28px);margin:0}
+  main{max-width:980px;margin:20px auto;padding:0 20px 48px 20px}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:20px 20px;margin:14px 0;box-shadow:0 2px 10px rgba(0,0,0,.03)}
+  .title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+  .title h2{font-size:18px;margin:0}
+  .muted{color:var(--muted)}
+  .pill{background:var(--chip);color:var(--accent-ink);border:1px solid #cfeedd;border-radius:999px;padding:4px 10px;font-weight:600;font-size:13px}
+  ol, ul{padding-left:18px;margin:8px 0 0 0}
+  code{background:#f2f2f2;border:1px solid #e4e4e4;border-radius:6px;padding:0 6px}
+  a{color:#1a73e8;text-decoration:none} a:hover{text-decoration:underline}
+  footer{max-width:980px;margin:28px auto;padding:0 20px 40px 20px;color:var(--muted);font-size:13px}
+  .grid{display:grid;grid-template-columns:1fr;gap:14px}
+  @media (min-width: 860px){ .grid{grid-template-columns:1fr 1fr} }
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 28px 20px 0 20px;
+    max-width: 980px;
+    margin: 0 auto;
+  }
+  .nas-logo {
+    height: 40px;
+  }
+  .back-btn {
+    background-color: #1DB954;
+    color: #fff;
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background-color 0.2s;
+  }
+  .back-btn:hover {
+    background-color: #17a44a;
+  }
+
+</style>
+</head>
+<body>
+
+<header>
+  <img class="nas-logo" src="img/naslogo.png" alt="NAS Logo">
+  <div class="header-text">
+    <h1>NAS Bonus Tracker — Quick Guide</h1>
+    <div class="muted">How to save your progress, export/import backups, and reset your week.</div>
+  </div>
+  <a class="btn back-btn" href="nasbonustracker.html">Back to App</a>
+</header>
+
+
+<main>
+  <section class="card">
+    <div class="title">
+      <h2>What it does</h2>
+      <span class="pill">For all NAS users</span>
+    </div>
+    <p>The <strong>NAS Weekly Bonus Tracker</strong> helps you tick off daily/weekly bonuses, see your running total, and track your current tier.</p>
+  </section>
+
+  <section class="grid">
+    <div class="card">
+      <div class="title"><h2>Where your data is stored</h2></div>
+      <p>Your progress is saved <strong>locally in your browser</strong> using <code>localStorage</code>. It is <em>not</em> stored on a server.</p>
+      <p class="muted">If you clear your browser data, switch browsers or devices, your progress will be removed unless you create a backup first.</p>
+    </div>
+
+    <div class="card">
+      <div class="title"><h2>Show times & your timezone</h2></div>
+      <p>Program times (e.g., <em>Mr. Oddzo Show</em>, <em>Top 20 Show</em>) are displayed automatically in <strong>your local timezone</strong>. The “Starts in” countdown is also adjusted to your timezone.</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="title"><h2>Export (save a backup)</h2></div>
+    <ol>
+      <li>Click <strong>Export</strong> (top right).</li>
+      <li>A file named like <code>nas_bonus_YYYY-MM-DD.json</code> will be downloaded.</li>
+      <li>Keep it in a safe place (you can rename it if you want).</li>
+    </ol>
+    <p class="muted">Tip: export before clearing cookies/cache, changing devices, or moving to a different browser.</p>
+  </section>
+
+  <section class="card">
+    <div class="title"><h2>Import (restore a backup)</h2></div>
+    <ol>
+      <li>Click <strong>Import</strong>.</li>
+      <li>Select your previously saved <code>.json</code> file.</li>
+      <li>Your progress, checkboxes and totals will be restored exactly as they were at export time.</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <div class="title"><h2>Reset Week</h2></div>
+    <p>Use <strong>Reset Week</strong> to clear the current week and start fresh. This does not touch your backup files; it only resets what’s in your browser.</p>
+  </section>
+
+  <section class="card">
+    <div class="title"><h2>Good practices</h2></div>
+    <ul>
+      <li><strong>Export regularly</strong> (weekly or after major updates).</li>
+      <li>Keep a <strong>single source of truth</strong> for your last backup (e.g., a NAS folder or cloud drive).</li>
+      <li>If you use multiple devices, <strong>import the latest backup</strong> before continuing.</li>
+    </ul>
+  </section>
+
+  <section class="grid">
+    <div class="card">
+      <div class="title"><h2>FAQ</h2></div>
+      <p><strong>Q:</strong> I can’t see my previous points.<br>
+      <strong>A:</strong> You likely cleared browser data or switched devices. Use <strong>Import</strong> with your last <code>.json</code> backup.</p>
+      <p><strong>Q:</strong> Can I sync between devices automatically?<br>
+      <strong>A:</strong> Not at this time. Use Export/Import to move your progress between devices.</p>
+      <p><strong>Q:</strong> Are my files shared with NAS?<br>
+      <strong>A:</strong> No. Backups remain with you. The app doesn’t upload your data.</p>
+    </div>
+
+    <div class="card">
+      <div class="title"><h2>Troubleshooting</h2></div>
+      <ul>
+        <li>If Import fails, make sure the file is a valid <code>.json</code> created by the app.</li>
+        <li>After importing, refresh the page once if the UI does not update immediately.</li>
+        <li>Confirm your system timezone is correct if the show times look off.</li>
+      </ul>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div>© NAS (New Artist Spotlight). This page is a quick guide for <em>NAS Weekly Bonus Tracker</em>.</div>
+</footer>
+</body>
+</html>
